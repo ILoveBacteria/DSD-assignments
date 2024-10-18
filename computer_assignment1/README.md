@@ -9,7 +9,7 @@
     - [ ] test bench -> Roomina
 - Procedural
     - [ ] multiplexer, adder modules -> Roomina
-    - [ ] top-level module -> Moein
+    - [x] top-level module -> Moein
     - [ ] test bench -> Moein
 - Gate level
     - [ ] multiplexer, adder modules -> Moein
