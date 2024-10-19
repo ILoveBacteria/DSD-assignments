@@ -1,4 +1,4 @@
-module adder_subtractor #(
+module adder_subtractor_procedural #(
     parameter N_BITS = 4
 )(
     input [N_BITS-1:0] a,
