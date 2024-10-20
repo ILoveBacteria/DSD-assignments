@@ -20,11 +20,14 @@ module gate_level_tb;
         a = 0; b = 0; select = 0;
 
         // 2-bit tests
+        // Set radix to unsigned in mpdelsim
         #10 a = 2'b01; b = 2'b01; select = 0; // 1 + 1 = 2
-        #10 a = 2'b10; b = 2'b01; select = 1; // -2 - 1 = -3 (overflow)
-        #10 a = 2'b11; b = 2'b01; select = 0; // -1 + 1 = 0
+        #10 a = 2'b10; b = 2'b01; select = 1; // 2 - 1 = 1
+        #10 a = 2'b11; b = 2'b01; select = 0; // 3 + 1 = 0 (overflow)
+
+        // Set radix to decimal in modelsim
         #10 a = 2'b00; b = 2'b11; select = 1; // 0 - (-1) = 1
-        #10 a = 2'b10; b = 2'b10; select = 0; // -2 + (-2) = 2 (overflow)
+        #10 a = 2'b10; b = 2'b01; select = 0; // -2 + 1 = -1
         #10 a = 2'b01; b = 2'b11; select = 1; // 1 - (-1) = 2 (overflow)
 
     end
