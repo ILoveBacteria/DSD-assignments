@@ -24,31 +24,47 @@ module adder (
 endmodule
 
 module multiplexer_2bit (
-    input [1:0] in0, in1, select,
+    input [1:0] in0, in1,
+    input select,
     output [1:0] out
 );
-    multiplexer mux1 (in0[0], in1[0], select, out[0]);
-    multiplexer mux2 (in0[1], in1[1], select, out[1]);
+    multiplexer mux0 (in0[0], in1[0], select, out[0]);
+    multiplexer mux1 (in0[1], in1[1], select, out[1]);
 endmodule
 
 module adder_2bit (
-    input [1:0] a, b, carry_in,
-    output [1:0] out, carry_out
+    input [1:0] a, b,
+    input carry_in,
+    output [1:0] out,
+    output carry_out
 );
-    wire carry1, carry2;
-    adder adder1 (a[0], b[0], carry_in, out[0], carry1);
-    adder adder2 (a[1], b[1], carry1, out[1], carry2);
-    assign carry_out = carry2;
+    wire carry_middle;
+    adder adder0 (a[0], b[0], carry_in, out[0], carry_middle);
+    adder adder1 (a[1], b[1], carry_middle, out[1], carry_out);
 endmodule
 
 module top_level (
-    input [1:0] in0,
-    input [1:0] in1,
+    input [1:0] in0, in1,
     input select,
     output [1:0] out,
     output carry_out
 );
-    wire [1:0] mux_out_adder_in;
-    multiplexer_2bit mux_instance (in1, ~in1+1, select, mux_out_adder_in); // select=0: add, select=1: subtract
-    adder_2bit adder_instance (mux_out_adder_in, in0, out, carry_out);
+    wire [1:0] mux_out;
+    wire [1:0] in1_complement;
+    assign in1_complement = ~in1 + 1;
+    
+    multiplexer_2bit mux_instance (
+        .in0(in1),
+        .in1(in1_complement),
+        .select(select),
+        .out(mux_out)
+    );
+    
+    adder_2bit adder_instance (
+        .a(mux_out),
+        .b(in0),
+        .carry_in(1'b0),
+        .out(out),
+        .carry_out(carry_out)
+    );
 endmodule
