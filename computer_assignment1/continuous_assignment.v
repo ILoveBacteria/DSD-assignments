@@ -8,8 +8,7 @@ module multiplexer #(
     input select,
     output [N_BITS-1:0] out
 );
-    assign out = (select == 0) ? in0 : 1'bZ;
-    assign out = (select == 1) ? in1 : 1'bZ;
+    assign out = (select == 0) ? in0 : (select == 1) ? in1 : {N_BITS{1'bZ}};
 endmodule
 
 module adder #(
