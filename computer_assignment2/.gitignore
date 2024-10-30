@@ -1,6 +1,8 @@
 work/
 .vscode/
 
+*.do
+
 *.mpf
 *.mti
 *.wlf
