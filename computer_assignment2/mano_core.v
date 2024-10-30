@@ -4,14 +4,14 @@ module mano_core(clk, rst);
     //*********************
     // Control signals
     //*********************
-    reg ar_ld, ar_clr;
+    reg ar_ld, ar_clr, ar_inr;
     reg ac_ld, ac_clr, ac_inr;
-    reg dr_ld, dr_clr;
-    reg tr_ld, tr_clr;
+    reg dr_ld, dr_clr, dr_inr;
+    reg tr_ld, tr_clr, tr_inr;
     reg pc_ld, pc_clr, pc_inr;
     reg ir_ld;
-    reg sc_clr;
     reg wr, rd;
+    reg sc_clr;
     reg [2:0] sc;
     reg [3:0] bus_sel;
     reg [3:0] alu_func;
@@ -22,6 +22,7 @@ module mano_core(clk, rst);
     wire [15:0] mem_out;
     reg  [15:0] alu_out, abus, dr, ac, tr, ir;
     reg  [11:0] pc = 0, ar;
+    reg  [7:0]  inpr, outr;
     reg  [15:0] mem [31:0];
     reg  i;
     
