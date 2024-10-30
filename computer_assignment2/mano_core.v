@@ -1,9 +1,9 @@
 module mano_core(clk, rst);
     input clk, rst;
 
-    //*********************
+    //************************************
     // Control signals
-    //*********************
+    //************************************
     reg ar_ld, ar_clr, ar_inr;
     reg ac_ld, ac_clr, ac_inr;
     reg dr_ld, dr_clr, dr_inr;
@@ -16,9 +16,9 @@ module mano_core(clk, rst);
     reg [3:0] bus_sel;
     reg [3:0] alu_func;
 
-    //***********************
+    //************************************
     // Registers and busses
-    //***********************
+    //************************************
     wire [15:0] mem_out;
     reg  [15:0] alu_out, abus, dr, ac, tr, ir;
     reg  [11:0] pc = 0, ar;
@@ -26,10 +26,9 @@ module mano_core(clk, rst);
     reg  [15:0] mem [31:0];
     reg  i;
     
-    
-    //*********************
-    // 4096x16 Memory
-    //*********************
+    //************************************
+    // 32x16 Memory
+    //************************************
     always @(posedge clk)
     begin
         if (wr == 1)
@@ -81,19 +80,25 @@ module mano_core(clk, rst);
         end
     end
 
+    //************************************
+    // Bus assigner
+    //************************************
     always @(*)
     begin
         case (bus_sel)
-            3'b001: abus = ar;
-            3'b010: abus = pc;
-            3'b011: abus = dr;
-            3'b100: abus = ac;
-            3'b101: abus = ir;
-            3'b110: abus = tr;
-            default:abus = mem_out;
+            3'b001:  abus = ar;
+            3'b010:  abus = pc;
+            3'b011:  abus = dr;
+            3'b100:  abus = ac;
+            3'b101:  abus = ir;
+            3'b110:  abus = tr;
+            default: abus = mem_out;
         endcase
     end
  
+    //************************************
+    // ALU
+    //************************************
     always @(*)
     begin
         case (alu_func)
@@ -104,9 +109,9 @@ module mano_core(clk, rst);
         endcase
     end
 
-//***********************
-// Combinational state machine always
-//***********************
+    //************************************
+    // Combinational state machine always
+    //************************************
     always @(*)
     begin
         ar_ld = 0;
