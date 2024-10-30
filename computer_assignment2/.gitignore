@@ -1,0 +1,6 @@
+work/
+.vscode/
+
+*.mpf
+*.mti
+*.wlf
