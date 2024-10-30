@@ -73,32 +73,38 @@ module mano_core(input clk, rst);
     always @(posedge clk)
     begin
         if (rst == 1)
-            sc = 3'b000;
+            sc = 3'b000; // reset state machine
         else
         begin
+            // Update sequence counter
             if (sc_clr == 1)
                 sc = 0;
             else  
                 sc = sc + 1;
             
+            // Copy IR[15] to i
             if (sc == 3'b101)
                 i = ir[15];
             
+            // Update acumulator register
             if (ac_clr == 1)
                 ac = 0;
             else if (ac_ld == 1)  
                 ac = alu_out;
 
+            // Update address register
             if (ar_clr == 1)
                 ar = 0;
             else if (ar_ld == 1)  
                 ar = abus;
 
+            // Update data register
             if (dr_clr == 1)
                 dr = 0;
             else if (dr_ld == 1)  
                 dr = abus;
 
+            // Update program counter
             if (pc_clr == 1)
                 pc = 0;
             else if (pc_ld == 1)  
@@ -106,6 +112,7 @@ module mano_core(input clk, rst);
             else if (pc_inr == 1)  
                 pc = pc + 1;
 
+            // Update instruction register
             if (ir_ld == 1)
                 ir = abus;
         end
@@ -132,28 +139,34 @@ module mano_core(input clk, rst);
         sc_clr = 0;
         wr = 0;
         rd = 0;
+
         case (sc)
+            // Copy PC to AR
             3'b000: 
             begin 
                 ar_ld = 1; 
-                bus_sel = 3'b010;  //PC
+                bus_sel = 3'b010; // PC on the bus
             end
 
+            // Read the next instruction from Memory and store it into IR
             3'b001: 
-            begin 
+            begin
                 pc_inr = 1; 
-                bus_sel = 3'b111;  //mem
                 ir_ld = 1;
+                bus_sel = 3'b111; // Memory on the bus
             end
             
+            // Copy the lower 12bits from IR to AR
             3'b010: 
             begin 
-                bus_sel = 3'b101;  //IR
                 ar_ld = 1;
+                bus_sel = 3'b101; // IR on the bus
             end
             
+            // Instruction executing - cycle 1
             3'b011: 
-            begin 
+            begin
+                // Register reference instruction
                 if (ir[14:12] == 3'b111)
                 begin
                     if (ir[11:0] == 12'b100000000000)
@@ -162,6 +175,7 @@ module mano_core(input clk, rst);
                         sc_clr = 1;
                     end
                 end
+                // Memory reference instruction
                 else
                 begin
                     if (i == 1)
@@ -172,6 +186,7 @@ module mano_core(input clk, rst);
                 end
             end
             
+            // Instruction executing - cycle 2
             3'b100: 
             begin 
             if (ir[14:12] == 3'b000)
