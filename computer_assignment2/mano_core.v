@@ -1,5 +1,4 @@
-module mano_core(clk, rst);
-    input clk, rst;
+module mano_core(input clk, rst);
 
     //************************************
     // Control signals
@@ -39,6 +38,38 @@ module mano_core(clk, rst);
     end
     assign mem_out = mem[ar[5:0]];
 
+    //************************************
+    // Bus assigner
+    //************************************
+    always @(*)
+    begin
+        case (bus_sel)
+            3'b001:  abus = ar;
+            3'b010:  abus = pc;
+            3'b011:  abus = dr;
+            3'b100:  abus = ac;
+            3'b101:  abus = ir;
+            3'b110:  abus = tr;
+            default: abus = mem_out;
+        endcase
+    end
+ 
+    //************************************
+    // ALU
+    //************************************
+    always @(*)
+    begin
+        case (alu_func)
+            3'b000:  alu_out = dr;
+            3'b001:  alu_out = dr & ac;
+            3'b010:  alu_out = dr + ac;
+            default: alu_out = dr + ac;
+        endcase
+    end
+
+    //************************************
+    // State machine always
+    //************************************
     always @(posedge clk)
     begin
         if (rst == 1)
@@ -78,35 +109,6 @@ module mano_core(clk, rst);
             if (ir_ld == 1)
                 ir = abus;
         end
-    end
-
-    //************************************
-    // Bus assigner
-    //************************************
-    always @(*)
-    begin
-        case (bus_sel)
-            3'b001:  abus = ar;
-            3'b010:  abus = pc;
-            3'b011:  abus = dr;
-            3'b100:  abus = ac;
-            3'b101:  abus = ir;
-            3'b110:  abus = tr;
-            default: abus = mem_out;
-        endcase
-    end
- 
-    //************************************
-    // ALU
-    //************************************
-    always @(*)
-    begin
-        case (alu_func)
-            3'b000: alu_out = dr;
-            3'b001: alu_out = dr & ac;
-            3'b010: alu_out = dr + ac;
-            default:alu_out = dr + ac;
-        endcase
     end
 
     //************************************
