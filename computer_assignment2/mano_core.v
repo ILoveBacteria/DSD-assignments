@@ -189,12 +189,12 @@ module mano_core(input clk, rst);
             // Instruction executing - cycle 2
             3'b100: 
             begin 
-            if (ir[14:12] == 3'b000)
-            begin
-                dr_ld = 1;
-                bus_sel = 3'b111;
-            end
-                sc_clr = 1;
+                if (ir[14:12] == 3'b000)
+                begin
+                    dr_ld = 1;
+                    bus_sel = 3'b111;
+                end
+                    sc_clr = 1;
             end
         endcase
     end

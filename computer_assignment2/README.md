@@ -21,3 +21,5 @@ do run.do
 - [ ] Copy the lower 12bits from IR to AR
 - [ ] Copy IR[15] to i
 - [ ] Add missed increment operations in State machine always
+- [ ] Implement all 12 register instructions
+- [ ] Implement all 7 memory instructions
