@@ -34,9 +34,12 @@ module mano_core(input clk, rst);
             mem[ar[5:0]] = abus;
         mem[0]  = 16'h7800; // Clear AC
         mem[1]  = 16'h7020; // Increment AC
-        mem[2]  = 16'h7200; // Complement AC
-        mem[3]  = 16'h7080; // Circulate right AC
-        mem[4]  = 16'h7040; // Circulate left AC
+        mem[2]  = 16'h7010; // Skip next instruction if AC is positive
+        mem[3]  = 16'h7020; // Increment AC
+        mem[4]  = 16'h7004; // Skip next instruction if AC is zero
+        mem[5]  = 16'h7200; // Complement AC
+        mem[6]  = 16'h7080; // Circulate right AC
+        mem[7]  = 16'h7040; // Circulate left AC
         mem[10] = 16'h0005;    
     end
     assign mem_out = mem[ar[5:0]];
@@ -208,6 +211,27 @@ module mano_core(input clk, rst);
                     begin
                         ac_ld = 1;
                         alu_func = 3'b101;
+                        sc_clr = 1;
+                    end
+                    // Skip next instruction if AC is positive
+                    else if (ir[11:0] == 12'h010)
+                    begin
+                        if (ac[15] == 0)
+                            pc_inr = 1;
+                        sc_clr = 1;
+                    end
+                    // Skip next instruction if AC is negative
+                    else if (ir[11:0] == 12'h008)
+                    begin
+                        if (ac[15] == 1)
+                            pc_inr = 1;
+                        sc_clr = 1;
+                    end
+                    // Skip next instruction if AC is zero
+                    else if (ir[11:0] == 12'h004)
+                    begin
+                        if (ac == 0)
+                            pc_inr = 1;
                         sc_clr = 1;
                     end
                 end
