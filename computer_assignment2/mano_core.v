@@ -40,7 +40,8 @@ module mano_core(input clk, rst);
         mem[5]  = 16'h7200; // Complement AC
         mem[6]  = 16'h7080; // Circulate right AC
         mem[7]  = 16'h7040; // Circulate left AC
-        mem[10] = 16'h0005;    
+        mem[8]  = 16'h0014; // And the content in mem[20] with AC
+        mem[20] = 16'h0005;    
     end
     assign mem_out = mem[ar[5:0]];
 
@@ -243,6 +244,31 @@ module mano_core(input clk, rst);
                         ar_ld = 1;
                         bus_sel = 3'b111;
                     end
+                end
+            end
+
+            // Instruction executing - cycle 2
+            3'b100:
+            begin
+                // Memory reference instruction
+                // Read operand from memory and store it DR
+                if (ir[14:12] == 3'b000)
+                begin
+                    dr_ld = 1;
+                    bus_sel = 3'b111; // Memory on the bus
+                end
+            end
+
+            // Instruction executing - cycle 3
+            3'b101:
+            begin
+                // Memory reference instruction
+                // DR & AC
+                if (ir[14:12] == 3'b000)
+                begin
+                    alu_func = 3'b001;
+                    ac_ld = 1;
+                    sc_clr = 1;
                 end
             end
 
