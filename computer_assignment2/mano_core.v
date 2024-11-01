@@ -41,7 +41,9 @@ module mano_core(input clk, rst);
         mem[6]  = 16'h7080; // Circulate right AC
         mem[7]  = 16'h7040; // Circulate left AC
         mem[8]  = 16'h0014; // And the content in mem[20] with AC
+        mem[9]  = 16'h2015; // Load the content in mem[21] to AC
         mem[20] = 16'h0005;    
+        mem[21] = 16'h1234;    
     end
     assign mem_out = mem[ar[5:0]];
 
@@ -73,7 +75,7 @@ module mano_core(input clk, rst);
             3'b011:  alu_out = ~ac;
             3'b100:  alu_out = {ac[0], ac[15:1]};
             3'b101:  alu_out = {ac[14:0], ac[15]};
-            default: alu_out = dr + ac;
+            default: alu_out = dr;
         endcase
     end
 
@@ -251,8 +253,8 @@ module mano_core(input clk, rst);
             3'b100:
             begin
                 // Memory reference instruction
-                // Read operand from memory and store it DR
-                if (ir[14:12] == 3'b000)
+                // Read operand from memory and store it in DR (AND, ADD, LDA instructions)
+                if (ir[14:12] == 3'b000 || ir[14:12] == 3'b001 || ir[14:12] == 3'b010)
                 begin
                     dr_ld = 1;
                     bus_sel = 3'b111; // Memory on the bus
@@ -263,10 +265,22 @@ module mano_core(input clk, rst);
             3'b101:
             begin
                 // Memory reference instruction
-                // DR & AC
+                // AND instruction - DR & AC
                 if (ir[14:12] == 3'b000)
                 begin
-                    alu_func = 3'b001;
+                    alu_func = 3'b001; // AND function
+                    ac_ld = 1;
+                    sc_clr = 1;
+                end
+                // ADD instruction - DR + AC
+                else if (ir[14:12] == 3'b001)
+                begin
+                    // TODO: implement e register
+                end
+                // LDA instruction - DR -> AC
+                else if (ir[14:12] == 3'b010)
+                begin
+                    alu_func = 0; // Pass DR to AC
                     ac_ld = 1;
                     sc_clr = 1;
                 end
