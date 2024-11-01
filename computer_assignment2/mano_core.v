@@ -35,6 +35,8 @@ module mano_core(input clk, rst);
         mem[0]  = 16'h7800; // Clear AC
         mem[1]  = 16'h7020; // Increment AC
         mem[2]  = 16'h7200; // Complement AC
+        mem[3]  = 16'h7080; // Circulate right AC
+        mem[4]  = 16'h7040; // Circulate left AC
         mem[10] = 16'h0005;    
     end
     assign mem_out = mem[ar[5:0]];
@@ -65,6 +67,8 @@ module mano_core(input clk, rst);
             3'b001:  alu_out = dr & ac;
             3'b010:  alu_out = dr + ac;
             3'b011:  alu_out = ~ac;
+            3'b100:  alu_out = {ac[0], ac[15:1]};
+            3'b101:  alu_out = {ac[14:0], ac[15]};
             default: alu_out = dr + ac;
         endcase
     end
@@ -190,6 +194,20 @@ module mano_core(input clk, rst);
                     begin
                         ac_ld = 1;
                         alu_func = 3'b011;
+                        sc_clr = 1;
+                    end
+                    // Circulate right AC
+                    else if (ir[11:0] == 12'h080)
+                    begin
+                        ac_ld = 1;
+                        alu_func = 3'b100;
+                        sc_clr = 1;
+                    end
+                    // Circulate left AC
+                    else if (ir[11:0] == 12'h040)
+                    begin
+                        ac_ld = 1;
+                        alu_func = 3'b101;
                         sc_clr = 1;
                     end
                 end
