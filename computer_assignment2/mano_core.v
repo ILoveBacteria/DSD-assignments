@@ -32,8 +32,8 @@ module mano_core(input clk, rst);
     begin
         if (wr == 1)
             mem[ar[5:0]] = abus;
-        mem[0]  = 16'h7800;
-        mem[1]  = 16'h100A;
+        mem[0]  = 16'h7800; // Clear AC
+        mem[1]  = 16'h7020; // Increment AC
         mem[10] = 16'h0005;    
     end
     assign mem_out = mem[ar[5:0]];
@@ -91,6 +91,8 @@ module mano_core(input clk, rst);
                 ac = 0;
             else if (ac_ld == 1)  
                 ac = alu_out;
+            else if (ac_inr == 1)
+                ac = ac + 1;
 
             // Update address register
             if (ar_clr == 1)
@@ -173,6 +175,12 @@ module mano_core(input clk, rst);
                     if (ir[11:0] == 12'h800)
                     begin
                         ac_clr = 1;
+                        sc_clr = 1;
+                    end
+                    // Increment AC
+                    else if (ir[11:0] == 12'h020)
+                    begin
+                        ac_inr = 1;
                         sc_clr = 1;
                     end
                 end
