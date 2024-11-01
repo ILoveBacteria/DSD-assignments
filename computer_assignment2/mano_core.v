@@ -32,8 +32,8 @@ module mano_core(input clk, rst);
     begin
         if (wr == 1)
             mem[ar[5:0]] = abus;
-        mem[0]  = 16'h100A;
-        mem[1]  = 16'h7800;
+        mem[0]  = 16'h7800;
+        mem[1]  = 16'h100A;
         mem[10] = 16'h0005;    
     end
     assign mem_out = mem[ar[5:0]];
@@ -169,7 +169,8 @@ module mano_core(input clk, rst);
                 // Register reference instruction
                 if (ir[14:12] == 3'b111)
                 begin
-                    if (ir[11:0] == 12'b100000000000)
+                    // Clear AC
+                    if (ir[11:0] == 12'h800)
                     begin
                         ac_clr = 1;
                         sc_clr = 1;
@@ -185,17 +186,8 @@ module mano_core(input clk, rst);
                     end
                 end
             end
-            
-            // Instruction executing - cycle 2
-            3'b100: 
-            begin 
-                if (ir[14:12] == 3'b000)
-                begin
-                    dr_ld = 1;
-                    bus_sel = 3'b111;
-                end
-                    sc_clr = 1;
-            end
+
+            default: sc_clr = 1;
         endcase
     end
 endmodule
