@@ -64,12 +64,14 @@ module mano_core(input clk, rst);
     always @(*)
     begin
         case (bus_sel)
-            3'b001:  abus = ar;
-            3'b010:  abus = pc;
-            3'b011:  abus = dr;
-            3'b100:  abus = ac;
-            3'b101:  abus = ir;
-            3'b110:  abus = tr;
+            4'b0001:  abus = ar;
+            4'b0010:  abus = pc;
+            4'b0011:  abus = dr;
+            4'b0100:  abus = ac;
+            4'b0101:  abus = ir;
+            4'b0110:  abus = tr;
+            4'b0111:  abus = mem_out;
+            4'b1000:  abus = inpr;
             default: abus = mem_out;
         endcase
     end
@@ -201,7 +203,7 @@ module mano_core(input clk, rst);
             3'b000: 
             begin 
                 ar_ld = 1; 
-                bus_sel = 3'b010; // PC on the bus
+                bus_sel = 4'b0010; // PC on the bus
             end
 
             // Read the next instruction from Memory and store it into IR
@@ -209,7 +211,7 @@ module mano_core(input clk, rst);
             begin
                 pc_inr = 1; 
                 ir_ld = 1;
-                bus_sel = 3'b111; // Memory on the bus
+                bus_sel = 4'b0111; // Memory on the bus
             end
             
             // Copy the lower 12bits from IR to AR, Update i register
@@ -217,7 +219,7 @@ module mano_core(input clk, rst);
             begin 
                 ar_ld = 1;
                 i_ld = 1;
-                bus_sel = 3'b101; // IR on the bus
+                bus_sel = 4'b0101; // IR on the bus
             end
             
             // Instruction executing - cycle 1
@@ -226,93 +228,107 @@ module mano_core(input clk, rst);
                 // Register reference instruction
                 if (ir[14:12] == 3'b111)
                 begin
-                    // Restart the state machine
-                    if (ir[11:0] == 12'h000)
-                        sc_clr = 1;
-
-                    // Clear AC
-                    if (ir[11:0] == 12'h800)
+                    // IO instructions - IR[15] == 1
+                    if (i == 1)
                     begin
-                        ac_clr = 1;
-                        sc_clr = 1;
+                        // INP instruction (Input character to AC)
+                        if (ir[11:0] == 12'h800)
+                        begin
+                            ac_clr = 1;
+                        end
                     end
 
-                    // Clear E
-                    else if (ir[11:0] == 12'h400)
+                    // Register reference instruction
+                    else
                     begin
-                        e_clr = 1;
-                        sc_clr = 1;
-                    end
+                        // Restart the state machine
+                        if (ir[11:0] == 12'h000)
+                            sc_clr = 1;
 
-                    // Increment AC
-                    else if (ir[11:0] == 12'h020)
-                    begin
-                        ac_inr = 1;
-                        sc_clr = 1;
-                    end
+                        // Clear AC
+                        if (ir[11:0] == 12'h800)
+                        begin
+                            ac_clr = 1;
+                            sc_clr = 1;
+                        end
 
-                    // Complement AC
-                    else if (ir[11:0] == 12'h200)
-                    begin
-                        ac_ld = 1;
-                        alu_func = 3'b011;
-                        sc_clr = 1;
-                    end
+                        // Clear E
+                        else if (ir[11:0] == 12'h400)
+                        begin
+                            e_clr = 1;
+                            sc_clr = 1;
+                        end
 
-                    // Complement E
-                    else if (ir[11:0] == 12'h100)
-                    begin
-                        e_ld = 1;
-                        alu_func = 3'b110;
-                        sc_clr = 1;
-                    end
+                        // Increment AC
+                        else if (ir[11:0] == 12'h020)
+                        begin
+                            ac_inr = 1;
+                            sc_clr = 1;
+                        end
 
-                    // Circulate right AC
-                    else if (ir[11:0] == 12'h080)
-                    begin
-                        ac_ld = 1;
-                        alu_func = 3'b100;
-                        sc_clr = 1;
-                    end
+                        // Complement AC
+                        else if (ir[11:0] == 12'h200)
+                        begin
+                            ac_ld = 1;
+                            alu_func = 3'b011;
+                            sc_clr = 1;
+                        end
 
-                    // Circulate left AC
-                    else if (ir[11:0] == 12'h040)
-                    begin
-                        ac_ld = 1;
-                        alu_func = 3'b101;
-                        sc_clr = 1;
-                    end
+                        // Complement E
+                        else if (ir[11:0] == 12'h100)
+                        begin
+                            e_ld = 1;
+                            alu_func = 3'b110;
+                            sc_clr = 1;
+                        end
 
-                    // Skip next instruction if AC is positive
-                    else if (ir[11:0] == 12'h010)
-                    begin
-                        if (ac[15] == 0)
-                            pc_inr = 1;
-                        sc_clr = 1;
-                    end
+                        // Circulate right AC
+                        else if (ir[11:0] == 12'h080)
+                        begin
+                            ac_ld = 1;
+                            alu_func = 3'b100;
+                            sc_clr = 1;
+                        end
 
-                    // Skip next instruction if AC is negative
-                    else if (ir[11:0] == 12'h008)
-                    begin
-                        if (ac[15] == 1)
-                            pc_inr = 1;
-                        sc_clr = 1;
-                    end
+                        // Circulate left AC
+                        else if (ir[11:0] == 12'h040)
+                        begin
+                            ac_ld = 1;
+                            alu_func = 3'b101;
+                            sc_clr = 1;
+                        end
 
-                    // Skip next instruction if AC is zero
-                    else if (ir[11:0] == 12'h004)
-                    begin
-                        if (ac == 0)
-                            pc_inr = 1;
-                        sc_clr = 1;
-                    end
+                        // Skip next instruction if AC is positive
+                        else if (ir[11:0] == 12'h010)
+                        begin
+                            if (ac[15] == 0)
+                                pc_inr = 1;
+                            sc_clr = 1;
+                        end
 
-                    // Skip next instruction if E is zero
-                    else if (ir[11:0] == 12'h002)
-                    begin
-                        if (e == 0)
-                            pc_inr = 1;
-                        sc_clr = 1;
+                        // Skip next instruction if AC is negative
+                        else if (ir[11:0] == 12'h008)
+                        begin
+                            if (ac[15] == 1)
+                                pc_inr = 1;
+                            sc_clr = 1;
+                        end
+
+                        // Skip next instruction if AC is zero
+                        else if (ir[11:0] == 12'h004)
+                        begin
+                            if (ac == 0)
+                                pc_inr = 1;
+                            sc_clr = 1;
+                        end
+
+                        // Skip next instruction if E is zero
+                        else if (ir[11:0] == 12'h002)
+                        begin
+                            if (e == 0)
+                                pc_inr = 1;
+                            sc_clr = 1;
+                        end
                     end
                 end
 
@@ -322,7 +338,7 @@ module mano_core(input clk, rst);
                     if (i == 1)
                     begin
                         ar_ld = 1;
-                        bus_sel = 3'b111;
+                        bus_sel = 4'b0111;
                     end
                 end
             end
@@ -330,43 +346,58 @@ module mano_core(input clk, rst);
             // Instruction executing - cycle 2
             3'b100:
             begin
+                // IO instructions
+                if (ir[15:12] == 4'hf)
+                begin
+                    // INP instruction (Input character to AC)
+                    if (ir[11:0] == 12'h800)
+                    begin
+                        bus_sel = 4'b1000; // INPR on the bus
+                        ac_ld = 1;
+                        sc_clr = 1;
+                    end
+                end
+
                 // Memory reference instruction
-                // Read operand from memory and store it in DR (AND, ADD, LDA instructions)
-                if (ir[14:12] == 3'b000 || ir[14:12] == 3'b001 || ir[14:12] == 3'b010)
+                else
                 begin
-                    dr_ld = 1;
-                    bus_sel = 3'b111; // Memory on the bus
-                end
+                    // Read operand from memory and store it in DR (AND, ADD, LDA instructions)
+                    if (ir[14:12] == 3'b000 || ir[14:12] == 3'b001 || ir[14:12] == 3'b010)
+                    begin
+                        dr_ld = 1;
+                        bus_sel = 4'b0111; // Memory on the bus
+                    end
 
-                // STA instruction
-                else if (ir[14:12] == 3'b011)
-                begin
-                    bus_sel = 3'b100;
-                    wr = 1;
-                    sc_clr = 1;
-                end
+                    // STA instruction
+                    else if (ir[14:12] == 3'b011)
+                    begin
+                        bus_sel = 4'b0100;
+                        wr = 1;
+                        sc_clr = 1;
+                    end
 
-                // BUN instruction - AR -> PC
-                else if (ir[14:12] == 3'b100)
-                begin
-                    bus_sel = 3'b001; // AR on the bus
-                    pc_ld = 1;
-                    sc_clr = 1;
-                end
+                    // BUN instruction - AR -> PC
+                    else if (ir[14:12] == 3'b100)
+                    begin
+                        bus_sel = 4'b0001; // AR on the bus
+                        pc_ld = 1;
+                        sc_clr = 1;
+                    end
 
-                // BSA instruction - PC -> M[AR], AR + 1 -> AR
-                else if (ir[14:12] == 3'b101)
-                begin
-                    bus_sel = 3'b010; // PC on the bus
-                    wr = 1;
-                    ar_inr = 1;
-                end
+                    // BSA instruction - PC -> M[AR], AR + 1 -> AR
+                    else if (ir[14:12] == 3'b101)
+                    begin
+                        bus_sel = 4'b0010; // PC on the bus
+                        wr = 1;
+                        ar_inr = 1;
+                    end
 
-                // ISZ - Increment and skip if zero - M[AR] -> DR
-                else if (ir[14:12] == 3'b110)
-                begin
-                    bus_sel = 3'b111; // Memory on the bus
-                    dr_ld = 1;
+                    // ISZ - Increment and skip if zero - M[AR] -> DR
+                    else if (ir[14:12] == 3'b110)
+                    begin
+                        bus_sel = 4'b0111; // Memory on the bus
+                        dr_ld = 1;
+                    end
                 end
             end
 
@@ -403,7 +434,7 @@ module mano_core(input clk, rst);
                 // BSA instruction - AR -> PC
                 else if (ir[14:12] == 3'b101)
                 begin
-                    bus_sel = 3'b001; // AR on the bus
+                    bus_sel = 4'b0001; // AR on the bus
                     pc_ld = 1;
                     sc_clr = 1;
                 end
@@ -421,7 +452,7 @@ module mano_core(input clk, rst);
                 // ISZ - Increment and skip if zero - DR -> M[AR], if DR == 0, skip next instruction
                 if (ir[14:12] == 3'b110)
                 begin
-                    bus_sel = 3'b011; // DR on the bus 
+                    bus_sel = 4'b0011; // DR on the bus 
                     wr = 1;
                     if (dr == 0)
                         pc_inr = 1;
