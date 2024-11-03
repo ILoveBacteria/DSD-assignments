@@ -95,7 +95,7 @@ module mano_core(input clk, rst);
                 sc = sc + 1;
             
             // Copy IR[15] to i
-            if (sc == 3'b101)
+            if (sc == 3'b010)
                 i = ir[15];
             
             // Update acumulator register
