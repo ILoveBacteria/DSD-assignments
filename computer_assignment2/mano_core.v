@@ -8,7 +8,7 @@ module mano_core(input clk, rst);
     reg dr_ld, dr_clr, dr_inr;
     reg tr_ld, tr_clr, tr_inr;
     reg pc_ld, pc_clr, pc_inr;
-    reg ir_ld;
+    reg ir_ld, outr_ld;
     reg wr, rd;
     reg sc_clr;
     reg [2:0] sc;
@@ -111,12 +111,16 @@ module mano_core(input clk, rst);
                 ar = 0;
             else if (ar_ld == 1)  
                 ar = abus;
+            else if (ar_inr == 1)
+                ar = ar + 1;
 
             // Update data register
             if (dr_clr == 1)
                 dr = 0;
             else if (dr_ld == 1)  
                 dr = abus;
+            else if (dr_inr == 1)
+                dr = dr + 1;
 
             // Update program counter
             if (pc_clr == 1)
@@ -129,6 +133,19 @@ module mano_core(input clk, rst);
             // Update instruction register
             if (ir_ld == 1)
                 ir = abus;
+
+            // Update TR
+            if (tr_clr == 1)
+                tr = 0;
+            else if (tr_ld == 1)  
+                tr = abus;
+            else if (tr_inr == 1)  
+                tr = tr + 1;
+
+            // Update OUTR
+            if (outr_ld == 1)
+                outr = abus;
+
         end
     end
 
