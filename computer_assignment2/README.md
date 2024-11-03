@@ -23,3 +23,4 @@ do run.do
 - [x] Add missed increment operations in State machine always
 - [x] Implement all 12 register instructions
 - [ ] Implement all 7 memory instructions
+- [ ] Read memory contents from a file
