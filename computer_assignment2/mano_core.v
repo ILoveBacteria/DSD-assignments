@@ -34,27 +34,6 @@ module mano_core(input clk, rst);
     begin
         if (wr == 1)
             mem[ar[5:0]] = abus;
-        mem[0] = 16'hA014; // Load H14 memory then H15 memory to AC
-        mem[1] = 16'h7800; // Clear AC
-        // mem[1] = 16'h7400; // Clear E
-        // mem[2] = 16'h7100; // Complement E
-        // mem[3] = 16'h2014;
-        // mem[4] = 16'h1015;
-        // mem[5] = 16'h3016;
-        // mem[0] = 16'h6014; // ISZ - Increment and skip if zero
-        // mem[1] = 16'h5017; // BSA - Store PC in h17
-        // mem[2] = 16'h4000; // Branch to 0
-        // mem[1]  = 16'h7020; // Increment AC
-        // mem[2]  = 16'h7010; // Skip next instruction if AC is positive
-        // mem[3]  = 16'h7020; // Increment AC
-        // mem[4]  = 16'h7004; // Skip next instruction if AC is zero
-        // mem[5]  = 16'h7200; // Complement AC
-        // mem[6]  = 16'h7080; // Circulate right AC
-        // mem[7]  = 16'h7040; // Circulate left AC
-        // mem[8]  = 16'h0014; // And the content in mem[20] with AC
-        // mem[9]  = 16'h2015; // Load the content in mem[21] to AC
-        mem[20] = 16'h0015;    
-        mem[21] = 16'h1234;    
     end
     assign mem_out = mem[ar[5:0]];
 
@@ -431,5 +410,30 @@ module mano_core(input clk, rst);
 
             default: sc_clr = 1;
         endcase
+    end
+
+    initial begin
+        $readmemh("memory.mem", mem);
+        // mem[0] = 16'hA014; // Load H14 memory then H15 memory to AC
+        // mem[1] = 16'h7800; // Clear AC
+        // mem[1] = 16'h7400; // Clear E
+        // mem[2] = 16'h7100; // Complement E
+        // mem[3] = 16'h2014;
+        // mem[4] = 16'h1015;
+        // mem[5] = 16'h3016;
+        // mem[0] = 16'h6014; // ISZ - Increment and skip if zero
+        // mem[1] = 16'h5017; // BSA - Store PC in h17
+        // mem[2] = 16'h4000; // Branch to 0
+        // mem[1]  = 16'h7020; // Increment AC
+        // mem[2]  = 16'h7010; // Skip next instruction if AC is positive
+        // mem[3]  = 16'h7020; // Increment AC
+        // mem[4]  = 16'h7004; // Skip next instruction if AC is zero
+        // mem[5]  = 16'h7200; // Complement AC
+        // mem[6]  = 16'h7080; // Circulate right AC
+        // mem[7]  = 16'h7040; // Circulate left AC
+        // mem[8]  = 16'h0014; // And the content in mem[20] with AC
+        // mem[9]  = 16'h2015; // Load the content in mem[21] to AC
+        // mem[20] = 16'h0015;    
+        // mem[21] = 16'h1234;    
     end
 endmodule
