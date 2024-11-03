@@ -39,7 +39,8 @@ module mano_core(input clk, rst);
         mem[3] = 16'h2014;
         mem[4] = 16'h1015;
         mem[5] = 16'h3016;
-        mem[6] = 16'h4000; // Branch to 0
+        mem[6] = 16'h5017; // BSA - Store PC in h17
+        mem[7] = 16'h4000; // Branch to 0
         // mem[1]  = 16'h7020; // Increment AC
         // mem[2]  = 16'h7010; // Skip next instruction if AC is positive
         // mem[3]  = 16'h7020; // Increment AC
@@ -343,6 +344,14 @@ module mano_core(input clk, rst);
                     pc_ld = 1;
                     sc_clr = 1;
                 end
+
+                // BSA instruction - PC -> M[AR], AR + 1 -> AR
+                else if (ir[14:12] == 3'b101)
+                begin
+                    bus_sel = 3'b010; // PC on the bus
+                    wr = 1;
+                    ar_inr = 1;
+                end
             end
 
             // Instruction executing - cycle 3
@@ -372,6 +381,14 @@ module mano_core(input clk, rst);
                 begin
                     alu_func = 0; // Pass DR to AC
                     ac_ld = 1;
+                    sc_clr = 1;
+                end
+
+                // BSA instruction - AR -> PC
+                else if (ir[14:12] == 3'b101)
+                begin
+                    bus_sel = 3'b001; // AR on the bus
+                    pc_ld = 1;
                     sc_clr = 1;
                 end
                 
