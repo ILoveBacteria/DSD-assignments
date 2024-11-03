@@ -22,5 +22,6 @@ do run.do
 - [x] Copy IR[15] to i
 - [x] Add missed increment operations in State machine always
 - [x] Implement all 12 register instructions
-- [ ] Implement all 7 memory instructions
+- [x] Implement all 7 memory instructions
+- [ ] Implement IO instructions
 - [ ] Read memory contents from a file
