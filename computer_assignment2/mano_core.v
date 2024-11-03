@@ -226,6 +226,10 @@ module mano_core(input clk, rst);
                 // Register reference instruction
                 if (ir[14:12] == 3'b111)
                 begin
+                    // Restart the state machine
+                    if (ir[11:0] == 12'h000)
+                        sc_clr = 1;
+
                     // Clear AC
                     if (ir[11:0] == 12'h800)
                     begin
