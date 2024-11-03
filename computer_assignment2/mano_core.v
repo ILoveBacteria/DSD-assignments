@@ -9,6 +9,7 @@ module mano_core(input clk, rst);
     reg tr_ld, tr_clr, tr_inr;
     reg pc_ld, pc_clr, pc_inr;
     reg ir_ld, outr_ld;
+    reg e_ld, e_clr;
     reg wr, rd;
     reg sc_clr;
     reg [2:0] sc;
@@ -19,11 +20,11 @@ module mano_core(input clk, rst);
     // Registers and busses
     //************************************
     wire [15:0] mem_out;
-    reg  [15:0] alu_out, abus, dr, ac, tr, ir;
+    reg  [15:0] alu_out, carry_out, abus, dr, ac, tr, ir;
     reg  [11:0] pc = 0, ar;
     reg  [7:0]  inpr, outr;
     reg  [15:0] mem [31:0];
-    reg  i;
+    reg  i, e;
     
     //************************************
     // 32x16 Memory
@@ -33,17 +34,19 @@ module mano_core(input clk, rst);
         if (wr == 1)
             mem[ar[5:0]] = abus;
         mem[0]  = 16'h7800; // Clear AC
-        mem[1]  = 16'h7020; // Increment AC
-        mem[2]  = 16'h7010; // Skip next instruction if AC is positive
-        mem[3]  = 16'h7020; // Increment AC
-        mem[4]  = 16'h7004; // Skip next instruction if AC is zero
-        mem[5]  = 16'h7200; // Complement AC
-        mem[6]  = 16'h7080; // Circulate right AC
-        mem[7]  = 16'h7040; // Circulate left AC
-        mem[8]  = 16'h0014; // And the content in mem[20] with AC
-        mem[9]  = 16'h2015; // Load the content in mem[21] to AC
-        mem[20] = 16'h0005;    
-        mem[21] = 16'h1234;    
+        mem[1] = 16'h7400; // Clear E
+        mem[2] = 16'h7100; // Complement E
+        // mem[1]  = 16'h7020; // Increment AC
+        // mem[2]  = 16'h7010; // Skip next instruction if AC is positive
+        // mem[3]  = 16'h7020; // Increment AC
+        // mem[4]  = 16'h7004; // Skip next instruction if AC is zero
+        // mem[5]  = 16'h7200; // Complement AC
+        // mem[6]  = 16'h7080; // Circulate right AC
+        // mem[7]  = 16'h7040; // Circulate left AC
+        // mem[8]  = 16'h0014; // And the content in mem[20] with AC
+        // mem[9]  = 16'h2015; // Load the content in mem[21] to AC
+        // mem[20] = 16'h0005;    
+        // mem[21] = 16'h1234;    
     end
     assign mem_out = mem[ar[5:0]];
 
@@ -71,10 +74,11 @@ module mano_core(input clk, rst);
         case (alu_func)
             3'b000:  alu_out = dr;
             3'b001:  alu_out = dr & ac;
-            3'b010:  alu_out = dr + ac;
+            3'b010:  {carry_out, alu_out} = dr + ac;
             3'b011:  alu_out = ~ac;
             3'b100:  alu_out = {ac[0], ac[15:1]};
             3'b101:  alu_out = {ac[14:0], ac[15]};
+            3'b110:  carry_out = ~e;
             default: alu_out = dr;
         endcase
     end
@@ -146,6 +150,12 @@ module mano_core(input clk, rst);
             if (outr_ld == 1)
                 outr = abus;
 
+            // Update e
+            if (e_clr == 1)
+                e = 0;
+            else if (e_ld == 1)  
+                e = carry_out;
+
         end
     end
 
@@ -156,13 +166,16 @@ module mano_core(input clk, rst);
     begin
         ar_ld = 0;
         ar_clr = 0;
+        ar_inr = 0;
         ac_ld = 0;
         ac_clr = 0;
         ac_inr = 0;
         dr_ld = 0;
         dr_clr = 0;
+        dr_inr = 0;
         tr_ld = 0;
         tr_clr = 0;
+        tr_inr = 0;
         pc_ld = 0;
         pc_clr = 0;
         pc_inr = 0;
@@ -170,6 +183,9 @@ module mano_core(input clk, rst);
         sc_clr = 0;
         wr = 0;
         rd = 0;
+        outr_ld = 0;
+        e_ld = 0;
+        e_clr = 0;
 
         case (sc)
             // Copy PC to AR
@@ -206,12 +222,21 @@ module mano_core(input clk, rst);
                         ac_clr = 1;
                         sc_clr = 1;
                     end
+
+                    // Clear E
+                    else if (ir[11:0] == 12'h400)
+                    begin
+                        e_clr = 1;
+                        sc_clr = 1;
+                    end
+
                     // Increment AC
                     else if (ir[11:0] == 12'h020)
                     begin
                         ac_inr = 1;
                         sc_clr = 1;
                     end
+
                     // Complement AC
                     else if (ir[11:0] == 12'h200)
                     begin
@@ -219,6 +244,15 @@ module mano_core(input clk, rst);
                         alu_func = 3'b011;
                         sc_clr = 1;
                     end
+
+                    // Complement E
+                    else if (ir[11:0] == 12'h100)
+                    begin
+                        e_ld = 1;
+                        alu_func = 3'b110;
+                        sc_clr = 1;
+                    end
+
                     // Circulate right AC
                     else if (ir[11:0] == 12'h080)
                     begin
@@ -226,6 +260,7 @@ module mano_core(input clk, rst);
                         alu_func = 3'b100;
                         sc_clr = 1;
                     end
+
                     // Circulate left AC
                     else if (ir[11:0] == 12'h040)
                     begin
@@ -233,6 +268,7 @@ module mano_core(input clk, rst);
                         alu_func = 3'b101;
                         sc_clr = 1;
                     end
+
                     // Skip next instruction if AC is positive
                     else if (ir[11:0] == 12'h010)
                     begin
@@ -240,6 +276,7 @@ module mano_core(input clk, rst);
                             pc_inr = 1;
                         sc_clr = 1;
                     end
+
                     // Skip next instruction if AC is negative
                     else if (ir[11:0] == 12'h008)
                     begin
@@ -247,6 +284,7 @@ module mano_core(input clk, rst);
                             pc_inr = 1;
                         sc_clr = 1;
                     end
+
                     // Skip next instruction if AC is zero
                     else if (ir[11:0] == 12'h004)
                     begin
@@ -254,7 +292,16 @@ module mano_core(input clk, rst);
                             pc_inr = 1;
                         sc_clr = 1;
                     end
+
+                    // Skip next instruction if E is zero
+                    else if (ir[11:0] == 12'h002)
+                    begin
+                        if (e == 0)
+                            pc_inr = 1;
+                        sc_clr = 1;
+                    end
                 end
+
                 // Memory reference instruction
                 else
                 begin

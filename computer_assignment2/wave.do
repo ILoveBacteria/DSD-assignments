@@ -26,17 +26,18 @@ add wave -noupdate -group Control_signals /mano_core_tb/U1/alu_func
 add wave -noupdate -group Buses /mano_core_tb/U1/mem_out
 add wave -noupdate -group Buses /mano_core_tb/U1/alu_out
 add wave -noupdate -group Buses /mano_core_tb/U1/abus
-add wave -noupdate -group Registers /mano_core_tb/U1/dr
-add wave -noupdate -group Registers /mano_core_tb/U1/ac
-add wave -noupdate -group Registers /mano_core_tb/U1/tr
-add wave -noupdate -group Registers /mano_core_tb/U1/ir
-add wave -noupdate -group Registers /mano_core_tb/U1/pc
-add wave -noupdate -group Registers /mano_core_tb/U1/ar
-add wave -noupdate -group Registers /mano_core_tb/U1/i
+add wave -noupdate -expand -group Registers /mano_core_tb/U1/dr
+add wave -noupdate -expand -group Registers /mano_core_tb/U1/ac
+add wave -noupdate -expand -group Registers /mano_core_tb/U1/e
+add wave -noupdate -expand -group Registers /mano_core_tb/U1/tr
+add wave -noupdate -expand -group Registers /mano_core_tb/U1/ir
+add wave -noupdate -expand -group Registers /mano_core_tb/U1/pc
+add wave -noupdate -expand -group Registers /mano_core_tb/U1/ar
+add wave -noupdate -expand -group Registers /mano_core_tb/U1/i
 add wave -noupdate /mano_core_tb/U1/mem
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {0 ns} 0}
-quietly wave cursor active 0
+WaveRestoreCursors {{Cursor 1} {71 ns} 0}
+quietly wave cursor active 1
 configure wave -namecolwidth 206
 configure wave -valuecolwidth 100
 configure wave -justifyvalue left
@@ -51,4 +52,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {105 ns}
+WaveRestoreZoom {44 ns} {149 ns}
