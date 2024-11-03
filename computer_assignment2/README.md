@@ -24,4 +24,4 @@ do run.do
 - [x] Implement all 12 register instructions
 - [x] Implement all 7 memory instructions
 - [ ] Implement IO instructions
-- [ ] Read memory contents from a file
+- [x] Read memory contents from a file
