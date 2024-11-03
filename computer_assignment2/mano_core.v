@@ -33,12 +33,13 @@ module mano_core(input clk, rst);
     begin
         if (wr == 1)
             mem[ar[5:0]] = abus;
-        mem[0]  = 16'h7800; // Clear AC
+        mem[0] = 16'h7800; // Clear AC
         mem[1] = 16'h7400; // Clear E
         mem[2] = 16'h7100; // Complement E
         mem[3] = 16'h2014;
         mem[4] = 16'h1015;
-        mem[5]  = 16'h3014;
+        mem[5] = 16'h3016;
+        mem[6] = 16'h4000; // Branch to 0
         // mem[1]  = 16'h7020; // Increment AC
         // mem[2]  = 16'h7010; // Skip next instruction if AC is positive
         // mem[3]  = 16'h7020; // Increment AC
@@ -332,6 +333,14 @@ module mano_core(input clk, rst);
                 begin
                     bus_sel = 3'b100;
                     wr = 1;
+                    sc_clr = 1;
+                end
+
+                // BUN instruction - AR -> PC
+                else if (ir[14:12] == 3'b100)
+                begin
+                    bus_sel = 3'b001; // AR on the bus
+                    pc_ld = 1;
                     sc_clr = 1;
                 end
             end
