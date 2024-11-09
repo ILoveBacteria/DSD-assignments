@@ -12,13 +12,18 @@ module addr #(
     // Combinational sum
     //******************************
     always @(*) begin
-        {result_carry, result_sum} = operand_a + operand_b;
+        if (addsub == 1) {
+            {result_carry, result_sum} = operand_a + operand_b;            
+        }
+        else {
+            {result_carry, result_sum} = operand_a - operand_b;            
+        }
     end
 
     //******************************
     // Sequential update register
     //******************************
-    always @(clk) begin
+    always @(posedge clk) begin
         if (nrst == 0) {
             // reset
         }
@@ -32,4 +37,47 @@ module addr #(
         cout = result_carry;
     end
 
+
+    parameter n = 8; // Adjust 'n' to the desired bit-width
+    reg [n:0] shift_A, shift_B;
+    reg [n:0] sum;
+    reg carry;
+    reg [3:0] count;
+    always @(posedge clk) begin
+        if (nrst == 0) begin
+            shift_A <= 0;
+            shift_B <= 0;
+            sum <= 0;
+            carry <= 0;
+            count <= 0;
+            done <= 0;
+            Sum <= 0;
+        end else if (start == 1) begin
+            shift_A <= {1'b0, A}; // Load operands into shift registers
+            shift_B <= {1'b0, B};
+            sum <= 0;
+            carry <= 0;
+            count <= 0;
+            done <= 0;
+        end else if (count < n) begin
+            {carry, sum[count]} <= shift_A[count] + shift_B[count] + carry; // Full adder
+            count <= count + 1;
+        end else begin
+            Sum <= sum[n-1:0]; // Assign result to Sum
+            done <= 1;
+        end
+    end
+
 endmodule
+
+
+
+// module serial_adder(
+//     input clk,
+//     input reset,
+//     input start,
+//     input [n-1:0] A, // first operand
+//     input [n-1:0] B, // second operand
+//     output reg [n-1:0] Sum, // Sum output
+//     output reg done // Done signal
+// );
