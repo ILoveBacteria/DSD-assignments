@@ -40,17 +40,17 @@ module addr #(
 
         if (!nrst) begin
             // Reset all registers
-            operand_a <= 0;
-            operand_b <= 0;
-            shift_a <= 0;
-            shift_b <= 0;
-            serial_sum <= 0;
-            serial_carry <= 0;
-            count <= 0;
-            sum <= 0;
-            cout <= 0;
-            done <= 0;
-            state <= 0;
+            operand_a = 0;
+            operand_b = 0;
+            shift_a = 0;
+            shift_b = 0;
+            serial_sum = 0;
+            serial_carry = 0;
+            count = 0;
+            sum = 0;
+            cout = 0;
+            done = 0;
+            state = 0;
         end
 
         else begin
@@ -60,38 +60,39 @@ module addr #(
                     if (start) begin
                         // Load operands
                         if (addsub == 0)
-                            shift_b <= b;
+                            shift_b = b;
                         else
-                            shift_b <= ~b + 1;
-                        shift_a <= a;
-                        serial_carry <= 0;
-                        count <= 0;
-                        state <= SERIAL; // next state
+                            shift_b = ~b + 1;
+                        shift_a = a;
+                        serial_carry = 0;
+                        count = 0;
+                        state = SERIAL; // next state
                     end
                     else
                     begin
+                        sum = result_sum;
+                        cout = result_carry;
                         if (addsub == 0)
-                            operand_b <= b;
+                            operand_b = b;
                         else
-                            operand_b <= ~b + 1;
-                        sum <= result_sum;
-                        cout <= result_carry;
-                        operand_a <= a;
+                            operand_b = ~b + 1;
+                        operand_a = a;
                     end
                 end
 
                 SERIAL: begin
-                    if (count < BIT) begin
-                        shift_a <= shift_a >> 1;
-                        shift_b <= shift_b >> 1;
-                        serial_sum <= serial_sum >> 1;
-                        count <= count + 1;
+                    if (count < BIT-1) begin
+                        // shift right
+                        serial_sum = serial_sum >> 1;
+                        shift_a = shift_a >> 1;
+                        shift_b = shift_b >> 1;
+                        count = count + 1;
                     end
                     else begin
-                        sum <= serial_sum;
-                        cout <= serial_carry;
-                        done <= 1;
-                        state <= COMB; // next state
+                        sum = serial_sum;
+                        cout = serial_carry;
+                        done = 1;
+                        state = COMB; // next state
                     end
                 end
             endcase
