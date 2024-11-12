@@ -21,27 +21,23 @@ module addr #(
     reg [BIT-1:0] shift_a, shift_b;
     reg [BIT-1:0] serial_sum;
     reg serial_carry;
-    reg [3:0] count;
-    reg is_serial_mode;
+    reg [BIT-1:0] count;
 
     // State definitions
-    localparam IDLE = 2'b00;
-    localparam COMBO = 2'b01;
-    localparam SERIAL = 2'b10;
-    reg [1:0] state;
+    localparam COMB = 0;
+    localparam SERIAL = 1;
+    reg state;
 
     // Combinational logic for combo mode
     always @(*) begin
-        if (addsub == 0) begin  // Addition
-            {result_carry, result_sum} = operand_a + operand_b;
-        end
-        else begin              // Subtraction
-            {result_carry, result_sum} = operand_a - operand_b;
-        end
+        {result_carry, result_sum} = operand_a + operand_b;
+        {serial_carry, serial_sum[BIT-1]} = shift_a[0] + shift_b[0] + serial_carry;
     end
 
     // Sequential logic
-    always @(posedge clk or negedge nrst) begin
+    always @(posedge clk) begin
+        done = 0;
+
         if (!nrst) begin
             // Reset all registers
             operand_a <= 0;
@@ -54,52 +50,48 @@ module addr #(
             sum <= 0;
             cout <= 0;
             done <= 0;
-            state <= IDLE;
-            is_serial_mode <= 0;
+            state <= 0;
         end
+
         else begin
             case (state)
-                IDLE: begin
+                COMB: begin
+                    // Combinational mode - one cycle operation
                     if (start) begin
                         // Load operands
-                        operand_a <= a;
-                        operand_b <= b;
+                        if (addsub == 0)
+                            shift_b <= b;
+                        else
+                            shift_b <= ~b + 1;
                         shift_a <= a;
-                        shift_b <= b;
-                        done <= 0;
+                        serial_carry <= 0;
                         count <= 0;
-                        is_serial_mode <= addsub;  // Serial mode for subtraction
-                        state <= (addsub) ? SERIAL : COMBO;
+                        state <= SERIAL; // next state
                     end
-                end
-
-                COMBO: begin
-                    // Combinational mode - one cycle operation
-                    sum <= result_sum;
-                    cout <= result_carry;
-                    done <= 1;
-                    state <= IDLE;
+                    else
+                    begin
+                        if (addsub == 0)
+                            operand_b <= b;
+                        else
+                            operand_b <= ~b + 1;
+                        sum <= result_sum;
+                        cout <= result_carry;
+                        operand_a <= a;
+                    end
                 end
 
                 SERIAL: begin
                     if (count < BIT) begin
-                        if (addsub == 0) begin
-                            // Serial addition
-                            {serial_carry, serial_sum[count]} <= 
-                                shift_a[count] + shift_b[count] + serial_carry;
-                        end
-                        else begin
-                            // Serial subtraction
-                            {serial_carry, serial_sum[count]} <= 
-                                shift_a[count] - shift_b[count] - (count == 0 ? 0 : serial_carry);
-                        end
+                        shift_a <= shift_a >> 1;
+                        shift_b <= shift_b >> 1;
+                        serial_sum <= serial_sum >> 1;
                         count <= count + 1;
                     end
                     else begin
                         sum <= serial_sum;
                         cout <= serial_carry;
                         done <= 1;
-                        state <= IDLE;
+                        state <= COMB; // next state
                     end
                 end
             endcase
