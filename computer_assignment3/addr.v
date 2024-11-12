@@ -31,7 +31,6 @@ module addr #(
     // Combinational logic for combo mode
     always @(*) begin
         {result_carry, result_sum} = operand_a + operand_b;
-        {serial_carry, serial_sum[BIT-1]} = shift_a[0] + shift_b[0] + serial_carry;
     end
 
     // Sequential logic
@@ -82,13 +81,15 @@ module addr #(
 
                 SERIAL: begin
                     if (count < BIT-1) begin
-                        // shift right
+                        {serial_carry, serial_sum[BIT-1]} = shift_a[0] + shift_b[0] + serial_carry;                        
+                        // Shift right
                         serial_sum = serial_sum >> 1;
                         shift_a = shift_a >> 1;
                         shift_b = shift_b >> 1;
                         count = count + 1;
                     end
                     else begin
+                        {serial_carry, serial_sum[BIT-1]} = shift_a[0] + shift_b[0] + serial_carry;
                         sum = serial_sum;
                         cout = serial_carry;
                         done = 1;
