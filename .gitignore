@@ -1,7 +1,7 @@
 work/
 .vscode/
 
-*.do
+run.do
 
 *.mpf
 *.mti
