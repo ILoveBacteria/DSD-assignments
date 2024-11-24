@@ -36,6 +36,19 @@ module tea_pipelined #(
     genvar i;
     generate
         for (i = 0; i < ROUNDS; i = i + 1) begin
+            // Intermediate combinational signals for current stage
+            reg [31:0] v1_shift_l4;
+            reg [31:0] v1_shift_r5;
+            reg [31:0] v0_shift_l4;
+            reg [31:0] v0_shift_r5;
+
+            always @(*) begin
+                v1_shift_l4 = v1_pipe[i] << 4;
+                v1_shift_r5 = v1_pipe[i] >> 5;
+                v0_shift_l4 = v0_pipe[i+1] << 4;
+                v0_shift_r5 = v0_pipe[i+1] >> 5;
+            end
+
             // Pipeline registers for each stage
             always @(posedge clk or negedge rst_n) begin
                 if (!rst_n) begin
@@ -45,15 +58,15 @@ module tea_pipelined #(
                 end else begin
                     // v0 update
                     v0_pipe[i+1] = v0_pipe[i] + 
-                                (((v1_pipe[i] << 4) + k0) ^ 
+                                ((v1_shift_l4 + k0) ^ 
                                     (v1_pipe[i] + sum_pipe[i]) ^ 
-                                    ((v1_pipe[i] >> 5) + k1));
+                                    (v1_shift_r5 + k1));
                     
                     // v1 update
                     v1_pipe[i+1] = v1_pipe[i] + 
-                                (((v0_pipe[i+1] << 4) + k2) ^ 
+                                ((v0_shift_l4 + k2) ^ 
                                     (v0_pipe[i+1] + sum_pipe[i]) ^ 
-                                    ((v0_pipe[i+1] >> 5) + k3));
+                                    (v0_shift_r5 + k3));
                     
                     // Sum update for next stage
                     sum_pipe[i+1] = sum_pipe[i] + DELTA;
