@@ -1,6 +1,6 @@
 module tea_pipelined #(
-    parameter DELTA = 32'h9E3779B9;
-    parameter ROUNDS = 32;
+    parameter DELTA = 32'h9E3779B9,
+    parameter ROUNDS = 32
 )(
     input wire clk,
     input wire rst_n,
@@ -36,21 +36,12 @@ module tea_pipelined #(
     genvar i;
     generate
         for (i = 0; i < ROUNDS; i = i + 1) begin
-            // Intermediate combinational signals for current stage
-            // reg [31:0] v1_shift_l4, v1_shift_r5, v0_shift_l4, v0_shift_r5;
-            // always @(*) begin
-            //     v1_shift_l4 = v1_pipe[i-1] << 4;
-            //     v1_shift_r5 = v1_pipe[i-1] >> 5;
-            //     v0_shift_l4 = v0_pipe[i-1] << 4;
-            //     v0_shift_r5 = v0_pipe[i-1] >> 5;
-            // end
-            
             // Pipeline registers for each stage
             always @(posedge clk or negedge rst_n) begin
                 if (!rst_n) begin
-                    v0_pipe[i] = 32'b0;
-                    v1_pipe[i] = 32'b0;
-                    sum_pipe[i] = 32'b0;
+                    v0_pipe[i+1] = 32'b0;
+                    v1_pipe[i+1] = 32'b0;
+                    sum_pipe[i+1] = 32'b0;
                 end else begin
                     // v0 update
                     v0_pipe[i+1] = v0_pipe[i] + 
