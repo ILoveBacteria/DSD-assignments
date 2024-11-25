@@ -26,6 +26,8 @@ module tea_pipelined_tb;
         #18 rst_n = 1;
 
         plaintext = 64'h0123456789ABCDEF;
-        key = 128'h000102030405060708090A0B0C0D0E0F;        
+        key = 128'h000102030405060708090A0B0C0D0E0F;
+
+        #10 plaintext = 64'hFEDCBA9876543210;        
     end
 endmodule
