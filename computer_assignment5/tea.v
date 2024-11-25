@@ -22,13 +22,13 @@ module tea_pipelined #(
     // input registers
     always @(posedge clk or negedge rst_n) begin
         if (rst_n == 0) begin
-            v0_pipe[0] <= 32'b0;
-            v1_pipe[0] <= 32'b0;
-            sum_pipe[0] <= 32'b0;
+            v0_pipe[0] = 32'b0;
+            v1_pipe[0] = 32'b0;
+            sum_pipe[0] = 32'b0;
         end else begin
-            v0_pipe[0] <= plaintext[63:32]; // v0 on the left (higher bits)
-            v1_pipe[0] <= plaintext[31:0]; // v1 on the right (lower bits)
-            sum_pipe[0] <= DELTA;
+            v0_pipe[0] = plaintext[63:32]; // v0 on the left (higher bits)
+            v1_pipe[0] = plaintext[31:0]; // v1 on the right (lower bits)
+            sum_pipe[0] = DELTA;
         end
     end
 
@@ -42,11 +42,29 @@ module tea_pipelined #(
             reg [31:0] v0_shift_l4;
             reg [31:0] v0_shift_r5;
 
+            reg [31:0] next_pipe_v0;
+            reg [31:0] next_pipe_v1;
+            reg [31:0] next_pipe_sum;
+
             always @(*) begin
                 v1_shift_l4 = v1_pipe[i] << 4;
                 v1_shift_r5 = v1_pipe[i] >> 5;
-                v0_shift_l4 = v0_pipe[i+1] << 4;
-                v0_shift_r5 = v0_pipe[i+1] >> 5;
+                v0_shift_l4 = next_pipe_v0 << 4;
+                v0_shift_r5 = next_pipe_v0 >> 5;
+            end
+
+            always @(*) begin
+                next_pipe_v0 = v0_pipe[i] + 
+                                ((v1_shift_l4 + k0) ^ 
+                                    (v1_pipe[i] + sum_pipe[i]) ^ 
+                                    (v1_shift_r5 + k1));
+                
+                next_pipe_v1 = v1_pipe[i] + 
+                                ((v0_shift_l4 + k2) ^ 
+                                    (next_pipe_v0 + sum_pipe[i]) ^ 
+                                    (v0_shift_r5 + k3));
+                
+                next_pipe_sum = sum_pipe[i] + DELTA;
             end
 
             // Pipeline registers for each stage
@@ -57,19 +75,13 @@ module tea_pipelined #(
                     sum_pipe[i+1] = 32'b0;
                 end else begin
                     // v0 update
-                    v0_pipe[i+1] = v0_pipe[i] + 
-                                ((v1_shift_l4 + k0) ^ 
-                                    (v1_pipe[i] + sum_pipe[i]) ^ 
-                                    (v1_shift_r5 + k1));
+                    v0_pipe[i+1] = next_pipe_v0;
                     
                     // v1 update
-                    v1_pipe[i+1] = v1_pipe[i] + 
-                                ((v0_shift_l4 + k2) ^ 
-                                    (v0_pipe[i+1] + sum_pipe[i]) ^ 
-                                    (v0_shift_r5 + k3));
+                    v1_pipe[i+1] = next_pipe_v1;
                     
                     // Sum update for next stage
-                    sum_pipe[i+1] = sum_pipe[i] + DELTA;
+                    sum_pipe[i+1] = next_pipe_sum;
                 end
             end
         end
