@@ -1,0 +1,98 @@
+// TestCase1:
+plaintext = 64'h1122334455667788;
+key = 128'h11111111222222223333333344444444;
+
+#10  
+// TestCase2:
+plaintext = 64'h99aabbccddeeff00;
+key = 128'haaaa5555ffff0000cccc333311118888;
+
+#10  
+// TestCase3:
+plaintext = 64'h0000111122223333;
+key = 128'h88887777666655554444333322221111;
+
+#10  
+// TestCase4:
+plaintext = 64'hffffffff00000000;
+key = 128'h1234fedc5678ba989abcdeff0fedcba9;
+
+#10  
+// TestCase5:
+plaintext = 64'habcde123456789ff;
+key = 128'h11112222333344445555666677778888;
+
+#10  
+// TestCase6:
+plaintext = 64'hcafed123baadf00d;
+key = 128'haabbccddeeff00112233445566778899;
+
+#10  
+// TestCase7:
+plaintext = 64'h123456789abcdef0;
+key = 128'h89abcdef0123456776543210fedcba98;
+
+#10  
+// TestCase8:
+plaintext = 64'h0011223344556677;
+key = 128'hfedcba987654321089abcdef01234567;
+
+#10  
+// TestCase9:
+plaintext = 64'h7766554433221100;
+key = 128'h123456789abcdef00fedcba976543210;
+
+#10  
+// TestCasea:
+plaintext = 64'hdeadbeffcafebabe;
+key = 128'h556677881122334499aabbccddeeff00;
+
+#10  
+// TestCaseb:
+plaintext = 64'h0102030405060708;
+key = 128'h11112222333344445555666677778888;
+
+#10  
+// TestCasec:
+plaintext = 64'hf0f1f2f3f4f5f6f7;
+key = 128'haabbccddeeff00112233445566778899;
+
+#10  
+// TestCased:
+plaintext = 64'h13579bdf2468ace0;
+key = 128'hcafebabedeadc0defeedfacebaadf00d;
+
+#10  
+// TestCasee:
+plaintext = 64'hfedcba9801234567;
+key = 128'h0badf00dba5eba11ca11ab1efacefeed;
+
+#10  
+// TestCasef:
+plaintext = 64'h8765432112345678;
+key = 128'h123456789abcdef076543210fedcba98;
+
+#10  
+// TestCase10:
+plaintext = 64'habcdef0123456789;
+key = 128'hfedcba9876543210123456789abcdef0;
+
+#10  
+// TestCase11:
+plaintext = 64'h0011eeffaaccddee;
+key = 128'h00112233445566778899aabbccddeeff;
+
+#10  
+// TestCase12:
+plaintext = 64'h5555aaaaffff0000;
+key = 128'h89abcdef0123456776543210fedcba98;
+
+#10  
+// TestCase13:
+plaintext = 64'haaaaaaaa55555555;
+key = 128'hcafed123baadf00d1111222233334444;
+
+#10  
+// TestCase14:
+plaintext = 64'h0f0e0d0c0b0a0908;
+key = 128'h55667788112233442233445566778899;
