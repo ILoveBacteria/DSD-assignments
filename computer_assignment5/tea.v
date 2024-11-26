@@ -8,16 +8,12 @@ module tea_pipelined #(
     input wire [127:0] key,
     output wire [63:0] ciphertext
 );
-    // Key division
-    wire [31:0] k0 = key[127:96];
-    wire [31:0] k1 = key[95:64];
-    wire [31:0] k2 = key[63:32];
-    wire [31:0] k3 = key[31:0];
     
     // Pipeline stages for v0, v1 and sum(DELTA)
     reg [31:0] v0_pipe [0:ROUNDS];
     reg [31:0] v1_pipe [0:ROUNDS];
     reg [31:0] sum_pipe [0:ROUNDS];
+    reg [127:0] key_pipe [0:ROUNDS];
 
     // input registers
     always @(posedge clk or negedge rst_n) begin
@@ -25,10 +21,12 @@ module tea_pipelined #(
             v0_pipe[0] = 32'b0;
             v1_pipe[0] = 32'b0;
             sum_pipe[0] = 32'b0;
+            key_pipe[0] = 128'b0;
         end else begin
             v0_pipe[0] = plaintext[63:32]; // v0 on the left (higher bits)
             v1_pipe[0] = plaintext[31:0]; // v1 on the right (lower bits)
             sum_pipe[0] = DELTA;
+            key_pipe[0] = key;
         end
     end
 
@@ -36,6 +34,12 @@ module tea_pipelined #(
     genvar i;
     generate
         for (i = 0; i < ROUNDS; i = i + 1) begin
+            // Key division
+            wire [31:0] k0 = key_pipe[i][127:96];
+            wire [31:0] k1 = key_pipe[i][95:64];
+            wire [31:0] k2 = key_pipe[i][63:32];
+            wire [31:0] k3 = key_pipe[i][31:0];
+
             // Intermediate combinational signals for current stage
             reg [31:0] v1_shift_l4;
             reg [31:0] v1_shift_r5;
@@ -73,6 +77,7 @@ module tea_pipelined #(
                     v0_pipe[i+1] = 32'b0;
                     v1_pipe[i+1] = 32'b0;
                     sum_pipe[i+1] = 32'b0;
+                    key_pipe[i+1] = 128'b0;
                 end else begin
                     // v0 update
                     v0_pipe[i+1] = next_pipe_v0;
@@ -82,6 +87,8 @@ module tea_pipelined #(
                     
                     // Sum update for next stage
                     sum_pipe[i+1] = next_pipe_sum;
+
+                    key_pipe[i+1] = {k0, k1, k2, k3};
                 end
             end
         end
