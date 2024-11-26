@@ -29,5 +29,6 @@ module tea_pipelined_tb;
         key = 128'h000102030405060708090A0B0C0D0E0F;
 
         #10 plaintext = 64'hFEDCBA9876543210;        
+        #10 plaintext = 64'hABCCBA9876543210;        
     end
 endmodule

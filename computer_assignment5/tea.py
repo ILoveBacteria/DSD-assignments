@@ -15,10 +15,14 @@ def encrypt(v, k):
 
 plaintext1 = [0x01234567, 0x89ABCDEF]
 plaintext2 = [0xFEDCBA98, 0x76543210]
+plaintext3 = [0xABCCBA98, 0x76543210]
 key = [0x00010203, 0x04050607, 0x08090A0B, 0x0C0D0E0F]
 
 encrypted = encrypt(plaintext1, key)
 print(hex(encrypted[0]), hex(encrypted[1])) 
 
 encrypted = encrypt(plaintext2, key)
+print(hex(encrypted[0]), hex(encrypted[1]))  
+
+encrypted = encrypt(plaintext3, key)
 print(hex(encrypted[0]), hex(encrypted[1]))  
