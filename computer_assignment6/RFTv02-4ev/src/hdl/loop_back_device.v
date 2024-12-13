@@ -15,18 +15,18 @@ module loop_back_device(
 		// Should be updated
 		//------------------------------------------------
 		output cut_clk,
-		output cut_rst,
-		output cut_en,
-		output [7:0] cut_din,
-		input  [7:0] cut_dout
+		output cut_rst_n,
+		output reg [63:0] cut_plaintext,
+		output reg [127:0] cut_key,
+		input  [63:0] cut_ciphertext
 	);
 
 	//----------------------------------------------------------------
 	// Number of input and output bits: 
 	// Should be updated
 	//----------------------------------------------------------------
-	parameter InputSize  = 11; // number of input bits
-	parameter OutputSize = 8;  // number of output bits
+	parameter InputSize  = 194; // number of input bits
+	parameter OutputSize = 64;  // number of output bits
 	//----------------------------------------------------------------
 	
 	
@@ -158,26 +158,25 @@ module loop_back_device(
 	//------------------------------------------
 
 	// convert input characters to bits
-	assign cut_clk  	= c2s(input_reg[0]);
-	assign cut_rst		= c2s(input_reg[1]);
-	assign cut_en  	  = c2s(input_reg[2]);
-	assign cut_din[7] = c2s(input_reg[3]);
-	assign cut_din[6] = c2s(input_reg[4]);
-	assign cut_din[5] = c2s(input_reg[5]);
-	assign cut_din[4] = c2s(input_reg[6]);
-	assign cut_din[3] = c2s(input_reg[7]);
-	assign cut_din[2] = c2s(input_reg[8]);
-	assign cut_din[1] = c2s(input_reg[9]);
-	assign cut_din[0] = c2s(input_reg[10]);
+  assign cut_clk = c2s(input_reg[0]);
+  assign cut_rst_n = c2s(input_reg[1]);
+  always @(*) begin
+    integer i;
+    for (i = 0; i < 64; i = i + 1) begin
+      cut_plaintext[i] = c2s(input_reg[2 + 64 - 1 - i]);
+    end
+
+    for (i = 0; i < 128; i = i + 1) begin
+      cut_key[i] = c2s(input_reg[2 + 64 + 128 - 1 - i]);
+    end
+  end
 
 	// convert output bits to character
-	assign output_reg[7] = s2c(cut_dout[7]);
-	assign output_reg[6] = s2c(cut_dout[6]);
-	assign output_reg[5] = s2c(cut_dout[5]);
-	assign output_reg[4] = s2c(cut_dout[4]);
-	assign output_reg[3] = s2c(cut_dout[3]);
-	assign output_reg[2] = s2c(cut_dout[2]);
-	assign output_reg[1] = s2c(cut_dout[1]);
-	assign output_reg[0] = s2c(cut_dout[0]);
+  always @(*) begin
+    integer i;
+    for (i = 0; i < 64; i = i + 1) begin
+      output_reg[i] = s2c(cut_ciphertext[i]);
+    end
+  end
 
 endmodule
