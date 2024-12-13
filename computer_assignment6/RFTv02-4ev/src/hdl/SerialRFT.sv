@@ -18,10 +18,10 @@ module SerialRFT
      //  Cuitsuit Under Test Signals
      //************************************
     wire cut_clk;
-    wire cut_rst;
-    wire cut_en;
-    wire [7:0] cut_din;
-    wire [7:0] cut_dout;
+    wire cut_rst_n;
+    wire [63:0] cut_plaintext;
+    wire [127:0] cut_key;
+		wire [63:0] cut_ciphertext;
   
   uart UART (
     .clk(mclk), 
@@ -48,10 +48,10 @@ module SerialRFT
     .rx_ready(rx_ready), 
     .tx_ready(tx_ready), 
     .cut_clk(cut_clk), 
-    .cut_rst(cut_rst), 
-    .cut_en(cut_en), 
-    .cut_din(cut_din), 
-    .cut_dout(cut_dout)
+    .cut_rst_n(cut_rst_n), 
+    .cut_plaintext(cut_plaintext), 
+    .cut_key(cut_key), 
+    .cut_ciphertext(cut_ciphertext)
   );
   
   //------------------------------------------
@@ -60,10 +60,10 @@ module SerialRFT
   //------------------------------------------
   reg8 CUT (
     .clk(cut_clk), 
-    .rst(rst), 
-    .en(cut_en), 
-    .din(cut_din), 
-    .dout(cut_dout)
+    .rst_n(cut_rst_n), 
+    .plaintext(cut_plaintext), 
+    .key(cut_key),
+    .ciphertext(cut_ciphertext)
   );
 
 endmodule
