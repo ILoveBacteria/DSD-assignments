@@ -7,5 +7,9 @@ run.do
 *.mti
 *.wlf
 *.zip
+*.rar
 
 *.cache/
+
+computer_assignment6/*.bit
+computer_assignment6/RFTv02-4ev/
