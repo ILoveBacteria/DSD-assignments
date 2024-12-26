@@ -43,7 +43,7 @@ module loop_back_device(
  
 	integer state;
 	reg [7:0] input_reg [0:255];
-  wire [7:0] output_reg [0:255];
+  reg [7:0] output_reg [0:255];
 	integer icntr, ocntr;
 	function c2s(input [7:0] x); 
 	begin
@@ -160,8 +160,9 @@ module loop_back_device(
 	// convert input characters to bits
   assign cut_clk = c2s(input_reg[0]);
   assign cut_rst_n = c2s(input_reg[1]);
+  
+  integer i;
   always @(*) begin
-    integer i;
     for (i = 0; i < 64; i = i + 1) begin
       cut_plaintext[i] = c2s(input_reg[2 + 64 - 1 - i]);
     end
@@ -173,7 +174,6 @@ module loop_back_device(
 
 	// convert output bits to character
   always @(*) begin
-    integer i;
     for (i = 0; i < 64; i = i + 1) begin
       output_reg[i] = s2c(cut_ciphertext[i]);
     end
