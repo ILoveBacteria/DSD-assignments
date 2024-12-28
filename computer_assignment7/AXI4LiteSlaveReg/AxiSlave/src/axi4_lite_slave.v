@@ -11,41 +11,48 @@ module axi4_lite_slave #(
     parameter DATA_WIDTH = 32
     )
     (
-        //Global Signals
+        // Global Signals
         input                           ACLK,
         input                           ARESETN,
 
-        ////Read Address Channel INPUTS
+        // Read Address Channel INPUTS
         input           [ADDRESS-1:0]   S_ARADDR,
         input                           S_ARVALID,
-        //Read Data Channel INPUTS
+
+        // Read Data Channel INPUTS
         input                           S_RREADY,
-        //Write Address Channel INPUTS
+
+        // Write Address Channel INPUTS
         /* verilator lint_off UNUSED */
         input           [ADDRESS-1:0]   S_AWADDR,
         input                           S_AWVALID,
-        //Write Data  Channel INPUTS
+
+        // Write Data  Channel INPUTS
         input          [DATA_WIDTH-1:0] S_WDATA,
         input          [3:0]            S_WSTRB,
         input                           S_WVALID,
-        //Write Response Channel INPUTS
+
+        // Write Response Channel INPUTS
         input                           S_BREADY,	
 
-        //Read Address Channel OUTPUTS
+        // Read Address Channel OUTPUTS
         output                     S_ARREADY,
-        //Read Data Channel OUTPUTS
-        output     [DATA_WIDTH-1:0]S_RDATA,
+
+        // Read Data Channel OUTPUTS
+        output [DATA_WIDTH-1:0]    S_RDATA,
         output          [1:0]      S_RRESP,
         output                     S_RVALID,
-        //Write Address Channel OUTPUTS
+
+        // Write Address Channel OUTPUTS
         output                     S_AWREADY,
         output                     S_WREADY,
-        //Write Response Channel OUTPUTS
+        
+        // Write Response Channel OUTPUTS
         output          [1:0]      S_BRESP,
         output                     S_BVALID
     );
 
-    localparam  REG_NUM = 32;
+    localparam REG_NUM       = 32;
     localparam IDLE          = 0;
     localparam WRITE_CHANNEL = 1;
     localparam WRESP_CHANNEL = 2;
@@ -115,12 +122,12 @@ module axi4_lite_slave #(
                 next_state = IDLE;
             end
         end
-        RADDR_CHANNEL  : if (S_ARVALID && S_ARREADY ) next_state = RDATA_CHANNEL;
-        RDATA_CHANNEL  : if (S_RVALID  && S_RREADY  ) next_state = IDLE;
-        WRITE_CHANNEL  : if (write_addr &&write_data) next_state = WRESP_CHANNEL;
-        WRESP_CHANNEL  : if (S_BVALID  && S_BREADY  ) next_state = IDLE;
+        RADDR_CHANNEL  : if (S_ARVALID  && S_ARREADY ) next_state = RDATA_CHANNEL;
+        RDATA_CHANNEL  : if (S_RVALID   && S_RREADY  ) next_state = IDLE;
+        WRITE_CHANNEL  : if (write_addr && write_data) next_state = WRESP_CHANNEL;
+        WRESP_CHANNEL  : if (S_BVALID   && S_BREADY  ) next_state = IDLE;
         default        : next_state = IDLE;
         endcase
-end
+    end
 endmodule
 
