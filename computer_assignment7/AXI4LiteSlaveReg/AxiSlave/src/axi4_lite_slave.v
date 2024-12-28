@@ -12,44 +12,44 @@ module axi4_lite_slave #(
     )
     (
         // Global Signals
-        input                           ACLK,
-        input                           ARESETN,
+        input                           ACLK, // # of used = 1
+        input                           ARESETN, // # of used = 1
 
         // Read Address Channel INPUTS
-        input           [ADDRESS-1:0]   S_ARADDR,
-        input                           S_ARVALID,
+        input           [ADDRESS-1:0]   S_ARADDR, // # of used = 4
+        input                           S_ARVALID, // # of used = 2
 
         // Read Data Channel INPUTS
-        input                           S_RREADY,
+        input                           S_RREADY, // # of used = 1
 
         // Write Address Channel INPUTS
         /* verilator lint_off UNUSED */
-        input           [ADDRESS-1:0]   S_AWADDR,
-        input                           S_AWVALID,
+        input           [ADDRESS-1:0]   S_AWADDR, // # of used = 4
+        input                           S_AWVALID, // # of used = 2
 
         // Write Data  Channel INPUTS
-        input          [DATA_WIDTH-1:0] S_WDATA,
-        input          [3:0]            S_WSTRB,
-        input                           S_WVALID,
+        input          [DATA_WIDTH-1:0] S_WDATA, // # of used = 2
+        input          [3:0]            S_WSTRB, // # of used = 0
+        input                           S_WVALID, // # of used = 1
 
         // Write Response Channel INPUTS
-        input                           S_BREADY,	
+        input                           S_BREADY, // # of used = 1
 
         // Read Address Channel OUTPUTS
-        output                     S_ARREADY,
+        output                     S_ARREADY, // # of used = 2
 
         // Read Data Channel OUTPUTS
-        output [DATA_WIDTH-1:0]    S_RDATA,
-        output          [1:0]      S_RRESP,
-        output                     S_RVALID,
+        output [DATA_WIDTH-1:0]    S_RDATA, // # of used = 1
+        output          [1:0]      S_RRESP, // # of used = 1
+        output                     S_RVALID, // # of used = 2
 
         // Write Address Channel OUTPUTS
-        output                     S_AWREADY,
-        output                     S_WREADY,
+        output                     S_AWREADY, // # of used = 2
+        output                     S_WREADY, // # of used = 2
         
         // Write Response Channel OUTPUTS
-        output          [1:0]      S_BRESP,
-        output                     S_BVALID
+        output          [1:0]      S_BRESP, // # of used = 1
+        output                     S_BVALID // # of used = 2
     );
 
     localparam REG_NUM       = 32;
@@ -63,8 +63,6 @@ module axi4_lite_slave #(
     reg  [ADDRESS-1 : 0]    read_addr;
     wire [ADDRESS-1 : 0]    S_ARADDR_T;
     wire [ADDRESS-1 : 0]    S_AWADDR_T;
-    wire write_addr;
-    wire write_data;
     reg  [DATA_WIDTH-1 : 0] result;
     reg  [2:0] state , next_state;
     
@@ -78,8 +76,6 @@ module axi4_lite_slave #(
     assign S_AWREADY = (state == WRITE_CHANNEL) ? 1 : 0;
     // Write
     assign S_WREADY = (state == WRITE_CHANNEL) ? 1 : 0;
-    assign write_addr = S_AWVALID && S_AWREADY;
-    assign write_data = S_WREADY &&S_WVALID;
     // Responce
     assign S_BVALID = (state == WRESP_CHANNEL) ? 1 : 0;
     assign S_BRESP  = (state == WRESP_CHANNEL )? 0:0;
@@ -108,25 +104,45 @@ module axi4_lite_slave #(
         end
     end
 
+    // State machine
     always @(*) begin
         next_state = state;
         case (state)
-        IDLE : begin
-            if (S_AWVALID) begin
-                next_state = WRITE_CHANNEL;
-            end 
-            else if (S_ARVALID) begin
-                next_state = RADDR_CHANNEL;
-            end 
-            else begin
-                next_state = IDLE;
+            IDLE: begin
+                if (S_AWVALID) begin
+                    next_state = WRITE_CHANNEL;
+                end 
+                else if (S_ARVALID) begin
+                    next_state = RADDR_CHANNEL;
+                end 
+                else begin
+                    next_state = IDLE;
+                end
             end
-        end
-        RADDR_CHANNEL  : if (S_ARVALID  && S_ARREADY ) next_state = RDATA_CHANNEL;
-        RDATA_CHANNEL  : if (S_RVALID   && S_RREADY  ) next_state = IDLE;
-        WRITE_CHANNEL  : if (write_addr && write_data) next_state = WRESP_CHANNEL;
-        WRESP_CHANNEL  : if (S_BVALID   && S_BREADY  ) next_state = IDLE;
-        default        : next_state = IDLE;
+
+            RADDR_CHANNEL: begin
+                if (S_ARVALID && S_ARREADY) 
+                    next_state = RDATA_CHANNEL;
+            end
+
+            RDATA_CHANNEL: begin
+                if (S_RVALID && S_RREADY)
+                    next_state = IDLE;
+            end
+
+            WRITE_CHANNEL: begin
+                if (S_AWVALID && S_AWREADY && S_WREADY && S_WVALID)
+                    next_state = WRESP_CHANNEL;
+            end
+
+            WRESP_CHANNEL: begin
+                if (S_BVALID && S_BREADY) 
+                    next_state = IDLE;
+            end
+
+            default: begin
+                next_state = IDLE;
+            end 
         endcase
     end
 endmodule
