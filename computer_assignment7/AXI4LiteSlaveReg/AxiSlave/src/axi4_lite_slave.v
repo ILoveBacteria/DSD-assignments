@@ -83,14 +83,10 @@ module axi4_lite_slave #(
     assign S_ARADDR_T = S_ARADDR[ADDRESS-1:2]; // Read address 
     assign S_AWADDR_T = S_AWADDR[ADDRESS-1:2]; // Write address 
     
-    integer i;
-
     always @(posedge ACLK) begin
         // Reset the register array
         if (~ARESETN) begin
-            for (i = 0; i < 32; i = i+1) begin
-                result = 32'b0;
-            end
+            result = 32'b0;
             state <= IDLE;
         end
         else begin
