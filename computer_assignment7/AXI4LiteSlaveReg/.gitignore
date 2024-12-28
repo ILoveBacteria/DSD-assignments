@@ -1,0 +1,16 @@
+*.xml
+*.tcl
+*.xpr
+
+
+xgui/
+*.sim
+*.ip_user_files
+*.hw
+*.runs
+*.log
+*.jou
+*.str
+*.sdk
+*.srcs
+.Xil/
