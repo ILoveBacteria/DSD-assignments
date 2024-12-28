@@ -59,12 +59,12 @@ module axi4_lite_slave #(
     localparam RADDR_CHANNEL = 3;
     localparam RDATA_CHANNEL = 4;
    
-    reg  [DATA_WIDTH-1 : 0] register [0 : REG_NUM-1];
-    reg  [ADDRESS-1 : 0]    read_addr;
-    wire [ADDRESS-1 : 0]    S_ARADDR_T;
-    wire [ADDRESS-1 : 0]    S_AWADDR_T;
-    reg  [DATA_WIDTH-1 : 0] result;
-    reg  [2:0] state , next_state;
+    reg  [2:0] state, next_state;
+    reg  [ADDRESS-1:0] read_addr;
+    wire [ADDRESS-1:0] S_ARADDR_T;
+    wire [ADDRESS-1:0] S_AWADDR_T;
+    reg  [DATA_WIDTH-1:0] register [0:REG_NUM-1]; // 32 ta register 32bits
+    reg  [DATA_WIDTH-1:0] result;
     
     // Address Read
     assign S_ARREADY = (state == RADDR_CHANNEL) ? 1 : 0;
@@ -80,14 +80,15 @@ module axi4_lite_slave #(
     assign S_BVALID = (state == WRESP_CHANNEL) ? 1 : 0;
     assign S_BRESP  = (state == WRESP_CHANNEL )? 0:0;
 
-    assign S_ARADDR_T = S_ARADDR[ADDRESS-1 : 2];
-    assign S_AWADDR_T = S_AWADDR[ADDRESS-1 : 2];
+    assign S_ARADDR_T = S_ARADDR[ADDRESS-1:2]; // Read address 
+    assign S_AWADDR_T = S_AWADDR[ADDRESS-1:2]; // Write address 
+    
     integer i;
 
     always @(posedge ACLK) begin
         // Reset the register array
         if (~ARESETN) begin
-            for (i = 0; i < 32; i=i+1) begin
+            for (i = 0; i < 32; i = i+1) begin
                 result = 32'b0;
             end
             state <= IDLE;
