@@ -68,14 +68,18 @@ module axi4_lite_slave #(
     
     // Address Read
     assign S_ARREADY = (state == RADDR_CHANNEL) ? 1 : 0;
+    
     // Read
     assign S_RVALID = (state == RDATA_CHANNEL) ? 1 : 0;
     assign S_RDATA  = (state == RDATA_CHANNEL) ? ((read_addr == 32) ? result : register[read_addr]) : 0;
     assign S_RRESP  = (state == RDATA_CHANNEL) ? 2'b00 : 0;
+
     // Address Write
     assign S_AWREADY = (state == WRITE_CHANNEL) ? 1 : 0;
+
     // Write
     assign S_WREADY = (state == WRITE_CHANNEL) ? 1 : 0;
+
     // Responce
     assign S_BVALID = (state == WRESP_CHANNEL) ? 1 : 0;
     assign S_BRESP  = (state == WRESP_CHANNEL )? 0:0;
