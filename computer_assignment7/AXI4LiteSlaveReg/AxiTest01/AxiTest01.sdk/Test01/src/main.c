@@ -10,13 +10,13 @@ int main()
 	for(;;)
 	{
 		xil_printf("--------------------------------\n\r");
-		for(i = 0; i < 32;i ++)
+		for(i = 0; i < 16; i++)
 		{
 			mem[AXI_ADDR0+i] = 1000+i;
 			xil_printf("M[%d] = %d\n\r", i, 1000+i);
 		}
 		sleep(1);
-		for(i =0; i <= 32;i ++)
+		for(i = 0; i <= 16; i++)
 		{
 			out = mem[AXI_ADDR0+i];
 			xil_printf("Read %d\n\r", out);

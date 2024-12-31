@@ -58,20 +58,33 @@ module axi4_lite_slave #(
     localparam WRESP_CHANNEL = 2;
     localparam RADDR_CHANNEL = 3;
     localparam RDATA_CHANNEL = 4;
+    localparam MY_STATE      = 5;
+
+    reg start;
+    wire clk;
+    reg rst;
+    wire [255:0] a;
+    wire [255:0] b;
+    wire [255:0] sum;
+    wire done;
+
+    adder my_adder (start, clk, rst, a, b, sum ,done);
+
+    assign clk = ACLK;
    
     reg  [2:0] state, next_state;
     reg  [ADDRESS-1:0] read_addr;
     wire [ADDRESS-1:0] S_ARADDR_T;
     wire [ADDRESS-1:0] S_AWADDR_T;
     reg  [DATA_WIDTH-1:0] register [0:REG_NUM-1]; // 32 ta register 32bits
-    reg  [DATA_WIDTH-1:0] result;
+    reg  [255:0] result;
     
     // Address Read
     assign S_ARREADY = (state == RADDR_CHANNEL) ? 1 : 0;
     
     // Read
     assign S_RVALID = (state == RDATA_CHANNEL) ? 1 : 0;
-    assign S_RDATA  = (state == RDATA_CHANNEL) ? ((read_addr == 32) ? result : register[read_addr]) : 0;
+    assign S_RDATA  = (state == RDATA_CHANNEL) ? ((read_addr == 16) ? result : register[read_addr]) : 0;
     assign S_RRESP  = (state == RDATA_CHANNEL) ? 2'b00 : 0;
 
     // Address Write
@@ -97,10 +110,23 @@ module axi4_lite_slave #(
             state <= next_state;
             if (state == WRITE_CHANNEL) begin
                 register[S_AWADDR_T] <= S_WDATA;
-                result[15:0] = result[15:0] + S_WDATA[15:0];
+                // result[15:0] = result[15:0] + S_WDATA[15:0];
             end
             else if (state == RADDR_CHANNEL) begin
                 read_addr <= S_ARADDR_T;
+            end
+            else if (state == IDLE) begin
+                start <= 0;
+                rst <= 1;
+            end
+            else if (state == MY_STATE) begin
+                start <= 1
+                rst <= 0
+                a <= {register[7], register[6], register[5], register[4], register[3], register[2], register[1], register[0]};
+                b <= {register[15], register[14], register[13], register[12], register[11], register[10], register[9], register[8]};
+            end
+            else if (state == RDATA_CHANNEL) begin
+                result <= sum;
             end
         end
     end
@@ -122,7 +148,14 @@ module axi4_lite_slave #(
             end
 
             RADDR_CHANNEL: begin
-                if (S_ARVALID && S_ARREADY) 
+                if (S_ARVALID && S_ARREADY && read_addr == 16)
+                    next_state = MY_STATE;
+                else
+                    next_state = RDATA_CHANNEL;
+            end
+
+            MY_STATE: begin
+                if (done)
                     next_state = RDATA_CHANNEL;
             end
 
@@ -148,3 +181,70 @@ module axi4_lite_slave #(
     end
 endmodule
 
+module adder (
+    input wire start,
+    input wire clk,
+    input wire rst,
+    input wire [255:0] a,
+    input wire [255:0] b,
+    output reg [255:0] sum,
+    output reg done
+);
+
+    // Internal registers
+    reg [255:0] shift_a, shift_b;
+    reg [255:0] serial_sum;
+    reg serial_carry;
+    reg [2:0] count; // 2^3 = 8
+
+    // state
+    reg state;
+    localparam IDLE = 0;
+    localparam RUNNING = 1;
+
+    // Sequential logic
+    always @(posedge clk) begin
+        if (rst) begin
+            shift_a = 0;
+            shift_b = 0;
+            serial_sum = 0;
+            serial_carry = 0;
+            count = 0;
+            sum = 0;
+            done = 0;
+            state = 0;
+        end else begin
+            case (state)
+                IDLE: begin
+                    if (start) begin
+                        // Load operands
+                        shift_b = b;
+                        shift_a = a;
+                        serial_carry = 0;
+                        count = 0;
+                        done = 0;
+                        state = RUNNING; // next state
+                    end
+                end
+
+                RUNNING: begin
+                    if (count < 7) begin
+                        {serial_carry, serial_sum[255:224]} = shift_a[31:0] + shift_b[31:0] + serial_carry;                        
+                        // Shift right
+                        serial_sum = serial_sum >> 32;
+                        shift_a = shift_a >> 32;
+                        shift_b = shift_b >> 32;
+                        count = count + 1;
+                    end
+                    else begin
+                        {serial_carry, serial_sum[255:224]} = shift_a[31:0] + shift_b[31:0] + serial_carry;  
+                        sum = serial_sum;
+                        done = 1;
+                        state = IDLE; // next state
+                    end
+                end
+            endcase
+        end
+    end
+
+endmodule
