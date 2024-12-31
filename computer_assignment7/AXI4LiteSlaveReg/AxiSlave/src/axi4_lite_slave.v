@@ -63,8 +63,8 @@ module axi4_lite_slave #(
     reg start;
     wire clk;
     reg rst;
-    wire [255:0] a;
-    wire [255:0] b;
+    reg [255:0] a;
+    reg [255:0] b;
     wire [255:0] sum;
     wire done;
 
@@ -120,8 +120,8 @@ module axi4_lite_slave #(
                 rst <= 1;
             end
             else if (state == MY_STATE) begin
-                start <= 1
-                rst <= 0
+                start <= 1;
+                rst <= 0;
                 a <= {register[7], register[6], register[5], register[4], register[3], register[2], register[1], register[0]};
                 b <= {register[15], register[14], register[13], register[12], register[11], register[10], register[9], register[8]};
             end
@@ -148,9 +148,9 @@ module axi4_lite_slave #(
             end
 
             RADDR_CHANNEL: begin
-                if (S_ARVALID && S_ARREADY && read_addr == 16)
+                if (S_ARVALID && S_ARREADY && S_ARADDR_T == 16)
                     next_state = MY_STATE;
-                else
+                else if (S_ARVALID && S_ARREADY)
                     next_state = RDATA_CHANNEL;
             end
 
