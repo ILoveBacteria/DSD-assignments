@@ -76,15 +76,13 @@ module axi4_lite_slave #(
     wire [ADDRESS-1:0] S_ARADDR_T;
     wire [ADDRESS-1:0] S_AWADDR_T;
     reg  [DATA_WIDTH-1:0] register [0:REG_NUM-1]; // 32 ta register 32bits
-    reg  [255:0] result;
-
     
     // Address Read
     assign S_ARREADY = (state == RADDR_CHANNEL) ? 1 : 0;
     
     // Read
     assign S_RVALID = (state == RDATA_CHANNEL) ? 1 : 0;
-    assign S_RDATA  = (state == RDATA_CHANNEL) ? ((read_addr == 16) ? result : register[read_addr]) : 0;
+    assign S_RDATA  = (state == RDATA_CHANNEL) ? ((read_addr == 16) ? sum[31:0] : register[read_addr]) : 0;
     assign S_RRESP  = (state == RDATA_CHANNEL) ? 2'b00 : 0;
 
     // Address Write
@@ -103,7 +101,6 @@ module axi4_lite_slave #(
     always @(posedge ACLK) begin
         // Reset the register array
         if (~ARESETN) begin
-            result = 32'b0;
             state <= IDLE;
         end
         else begin
@@ -128,7 +125,14 @@ module axi4_lite_slave #(
                 b <= 3;
             end
             else if (state == RDATA_CHANNEL) begin
-                result <= sum;
+                register[16] <= sum[31:0];
+                register[17] <= sum[63:32];
+                register[18] <= sum[95:64];
+                register[19] <= sum[127:96];
+                register[20] <= sum[159:128];
+                register[21] <= sum[191:160];
+                register[22] <= sum[223:192];
+                register[23] <= sum[255:224];
             end
         end
     end
