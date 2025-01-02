@@ -83,7 +83,7 @@ module axi4_lite_slave #(
     
     // Read
     assign S_RVALID = (state == RDATA_CHANNEL) ? 1 : 0;
-    assign S_RDATA  = (state == RDATA_CHANNEL) ? ((read_addr == 16) ? sum[31:0] : register[read_addr]) : 0;
+    assign S_RDATA  = (state == RDATA_CHANNEL) ? register[read_addr] : 0;
     assign S_RRESP  = (state == RDATA_CHANNEL) ? 2'b00 : 0;
 
     // Address Write
@@ -122,8 +122,6 @@ module axi4_lite_slave #(
                 rst <= 0;
                 a <= {register[7], register[6], register[5], register[4], register[3], register[2], register[1], register[0]};
                 b <= {register[15], register[14], register[13], register[12], register[11], register[10], register[9], register[8]};
-            end
-            else if (state == RDATA_CHANNEL) begin
                 register[16] <= sum[31:0];
                 register[17] <= sum[63:32];
                 register[18] <= sum[95:64];

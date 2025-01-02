@@ -118,5 +118,19 @@ module axi_tb();
         S_ARADDR = temp_var << 2;
         S_ARVALID = 1;
         S_RREADY = 1;
+
+        #10
+        
+        wait(S_RVALID == 1'b1);
+
+        temp_var = 17;
+        S_ARADDR = temp_var << 2;
+
+        #10
+
+        wait(S_RVALID == 1'b1);
+        
+        temp_var = 18;
+        S_ARADDR = temp_var << 2;
     end
 endmodule
