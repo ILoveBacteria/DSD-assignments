@@ -3,9 +3,19 @@
 module NeuralNetwork (
     input clk,
     input rst,
-    input [783:0] features, // 784 input features
-    output reg [3:0] prediction // 10 output classes (ArgMax index)
+    input start,
+    input [783:0] in_features, // 784 input features
+    output reg [3:0] prediction, // 10 output classes (ArgMax index)
+    output reg done
 );
+
+    // register to hold the input features
+    reg [783:0] features;
+
+    // state machine
+    localparam IDLE = 0, COMPUTE = 1;
+    reg state;
+    reg [2:0] count_clocks; 
 
     // Define the parameters for layer sizes
     parameter INPUT_SIZE = 784;
@@ -103,8 +113,26 @@ module NeuralNetwork (
     // ============================================
     always @(posedge clk or posedge rst) begin
     if (rst) begin
+        state <= IDLE;
+        done <= 0;
+        count_clocks <= 0;
         prediction <= 0;
-    end else begin
+        for (i = 0; i < INPUT_SIZE; i = i + 1) begin
+            features[i] <= 0;
+        end
+    end 
+    else if (state == IDLE) begin
+        if (start) begin
+            // Load the input features
+            for (i = 0; i < INPUT_SIZE; i = i + 1) begin
+                features[i] <= in_features[i];
+            end
+            state <= COMPUTE;
+            done <= 0;
+            count_clocks <= 0;
+        end
+    end 
+    else begin
         // Layer 1 computation
         for (i = 0; i < HIDDEN1_SIZE; i = i + 1) begin
             hidden1[i] <= new_hidden1[i];
@@ -122,6 +150,15 @@ module NeuralNetwork (
 
         // ArgMax operation
         prediction <= new_prediction;
+
+        // Update state or increment the clock counter
+        if (count_clocks >= 3) begin
+            state <= IDLE;
+            done <= 1;
+        end
+        else begin
+            count_clocks <= count_clocks + 1;
+        end
     end
 end
 
