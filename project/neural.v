@@ -39,7 +39,10 @@ module NeuralNetwork (
     endfunction
 
 
+    // ============================================
     // combinational Computation of the neurons
+    // ============================================
+
     // layer 1
     reg signed [15:0] new_hidden1 [0:HIDDEN1_SIZE-1];
     always @(*) begin
@@ -54,11 +57,15 @@ module NeuralNetwork (
 
     // layer 2
     reg signed [15:0] new_hidden2 [0:HIDDEN2_SIZE-1];
+    reg signed [15:0] multiplier_out2 [0:HIDDEN2_SIZE-1][0:HIDDEN1_SIZE-1];
+    reg signed [15:0] shift_out2 [0:HIDDEN2_SIZE-1][0:HIDDEN1_SIZE-1];
     always @(*) begin
         for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
             new_hidden2[i] = biases2[i];
             for (j = 0; j < HIDDEN1_SIZE; j = j + 1) begin
-                new_hidden2[i] = new_hidden2[i] + hidden1[j] * weights2[i][j];
+                multiplier_out2[i][j] = hidden1[j] * weights2[i][j];
+                shift_out2[i][j] = multiplier_out2[i][j] >> 8;
+                new_hidden2[i] = new_hidden2[i] + shift_out2[i][j];
             end
             new_hidden2[i] = relu(new_hidden2[i]);
         end
@@ -66,11 +73,15 @@ module NeuralNetwork (
 
     // Output Layer computation
     reg signed [15:0] new_output_layer [0:OUTPUT_SIZE-1];
+    reg signed [15:0] multiplier_out3 [0:OUTPUT_SIZE-1][0:HIDDEN2_SIZE-1];
+    reg signed [15:0] shift_out3 [0:OUTPUT_SIZE-1][0:HIDDEN2_SIZE-1];
     always @(*) begin
         for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin
             new_output_layer[i] = biases3[i];
             for (j = 0; j < HIDDEN2_SIZE; j = j + 1) begin
-                new_output_layer[i] = new_output_layer[i] + hidden2[j] * weights3[i][j];
+                multiplier_out3[i][j] = hidden2[j] * weights3[i][j];
+                shift_out3[i][j] = multiplier_out3[i][j] >> 8;
+                new_output_layer[i] = new_output_layer[i] + shift_out3[i][j];
             end
         end
     end
@@ -80,16 +91,19 @@ module NeuralNetwork (
     always @(*) begin
         new_prediction = 0;
         for (i = 1; i < OUTPUT_SIZE; i = i + 1) begin
-            if (new_output_layer[i] > new_output_layer[new_prediction]) begin
+            if (output_layer[i] > output_layer[new_prediction]) begin
                 new_prediction = i;
             end
         end
     end
     
+
+    // ============================================
     // Sequential update of the neurons
+    // ============================================
     always @(posedge clk or posedge rst) begin
     if (rst) begin
-        prediction <= 0;  // Non-blocking for registers
+        prediction <= 0;
     end else begin
         // Layer 1 computation
         for (i = 0; i < HIDDEN1_SIZE; i = i + 1) begin
