@@ -18,6 +18,7 @@ void read()
 
 void write_number(int a[8], int b[8])
 {
+	xil_printf("-------------WRITE-------------\n\r");
 	int i = 7;
 	int j = 0;
 	for(; i >= 0; i--)
@@ -59,7 +60,7 @@ int main()
 //	int b[8] = {0x3, 0x0, 0x0, 0x1, 0x0, 0x4, 0x5, 0x6};
 
 	int a[8] = {8, 7, 6, 5, 4, 3, 2, 1};
-	int b[8] = {16, 15, 14, 13, 12, 11, 10, 9};
+	int b[8] = {16, 15, 14, 13, 12, 11, 10, 0xFFFFFFFF};
 
 	for(;;)
 	{
