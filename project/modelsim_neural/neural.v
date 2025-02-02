@@ -65,7 +65,7 @@ module NeuralNetwork (
 
     // layer 2
     reg signed [15:0] new_hidden2 [0:HIDDEN2_SIZE-1];
-    reg signed [15:0] multiplier_out2 [0:HIDDEN2_SIZE-1][0:HIDDEN1_SIZE-1];
+    reg signed [31:0] multiplier_out2 [0:HIDDEN2_SIZE-1][0:HIDDEN1_SIZE-1];
     reg signed [15:0] shift_out2 [0:HIDDEN2_SIZE-1][0:HIDDEN1_SIZE-1];
     always @(*) begin
         for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
@@ -81,7 +81,7 @@ module NeuralNetwork (
 
     // Output Layer computation
     reg signed [15:0] new_output_layer [0:OUTPUT_SIZE-1];
-    reg signed [15:0] multiplier_out3 [0:OUTPUT_SIZE-1][0:HIDDEN2_SIZE-1];
+    reg signed [31:0] multiplier_out3 [0:OUTPUT_SIZE-1][0:HIDDEN2_SIZE-1];
     reg signed [15:0] shift_out3 [0:OUTPUT_SIZE-1][0:HIDDEN2_SIZE-1];
     always @(*) begin
         for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin
