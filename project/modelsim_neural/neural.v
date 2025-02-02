@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+// `timescale 1ns / 1ps
 
 module NeuralNetwork (
     input clk,
@@ -112,54 +112,63 @@ module NeuralNetwork (
     // Sequential update of the neurons
     // ============================================
     always @(posedge clk or posedge rst) begin
-    if (rst) begin
-        state <= IDLE;
-        done <= 0;
-        count_clocks <= 0;
-        prediction <= 0;
-        for (i = 0; i < INPUT_SIZE; i = i + 1) begin
-            features[i] <= 0;
-        end
-    end 
-    else if (state == IDLE) begin
-        if (start) begin
-            // Load the input features
-            for (i = 0; i < INPUT_SIZE; i = i + 1) begin
-                features[i] <= in_features[i];
-            end
-            state <= COMPUTE;
+        if (rst) begin
+            state <= IDLE;
             done <= 0;
             count_clocks <= 0;
-        end
-    end 
-    else begin
-        // Layer 1 computation
-        for (i = 0; i < HIDDEN1_SIZE; i = i + 1) begin
-            hidden1[i] <= new_hidden1[i];
-        end
-
-        // Layer 2 computation
-        for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
-            hidden2[i] <= new_hidden2[i];
-        end
-
-        // Output Layer computation
-        for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin
-            output_layer[i] <= new_output_layer[i];
-        end
-
-        // ArgMax operation
-        prediction <= new_prediction;
-
-        // Update state or increment the clock counter
-        if (count_clocks >= 3) begin
-            state <= IDLE;
-            done <= 1;
-        end
+            prediction <= 0;
+            for (i = 0; i < INPUT_SIZE; i = i + 1) begin
+                features[i] <= 0;
+            end
+        end 
+        else if (state == IDLE) begin
+            if (start) begin
+                // Load the input features
+                for (i = 0; i < INPUT_SIZE; i = i + 1) begin
+                    features[i] <= in_features[i];
+                end
+                state <= COMPUTE;
+                done <= 0;
+                count_clocks <= 0;
+            end
+        end 
         else begin
-            count_clocks <= count_clocks + 1;
+            // Layer 1 computation
+            for (i = 0; i < HIDDEN1_SIZE; i = i + 1) begin
+                hidden1[i] <= new_hidden1[i];
+            end
+
+            // Layer 2 computation
+            for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
+                hidden2[i] <= new_hidden2[i];
+            end
+
+            // Output Layer computation
+            for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin
+                output_layer[i] <= new_output_layer[i];
+            end
+
+            // ArgMax operation
+            prediction <= new_prediction;
+
+            // Update state or increment the clock counter
+            if (count_clocks >= 3) begin
+                state <= IDLE;
+                done <= 1;
+            end
+            else begin
+                count_clocks <= count_clocks + 1;
+            end
         end
     end
-end
+
+    initial begin
+        $readmemb("layer1_weight.mem", weights1);
+        $readmemb("layer1_bias.mem", biases1);
+        $readmemb("layer2_weight.mem", weights2);
+        $readmemb("layer2_bias.mem", biases2);
+        $readmemb("layer3_weight.mem", weights3);
+        $readmemb("layer3_bias.mem", biases3);
+    end
 
 endmodule
