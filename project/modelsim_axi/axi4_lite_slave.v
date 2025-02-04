@@ -200,21 +200,51 @@ module NeuralNetwork (
     parameter OUTPUT_SIZE = 10;
     
     // Define memory for weights and biases (assumed preloaded)
-    reg signed [15:0] weights1 [0:HIDDEN1_SIZE-1][0:INPUT_SIZE-1];
-    reg signed [15:0] biases1 [0:HIDDEN1_SIZE-1];
+    (* ram_style = "block" *) reg signed [15:0] mem_weights1 [0:65535];
+    (* ram_style = "block" *) reg signed [15:0] mem_biases1 [0:63];
     
-    reg signed [15:0] weights2 [0:HIDDEN2_SIZE-1][0:HIDDEN1_SIZE-1];
-    reg signed [15:0] biases2 [0:HIDDEN2_SIZE-1];
+    (* ram_style = "block" *) reg signed [15:0] mem_weights2 [0:2047];
+    (* ram_style = "block" *) reg signed [15:0] mem_biases2 [0:31];
     
-    reg signed [15:0] weights3 [0:OUTPUT_SIZE-1][0:HIDDEN2_SIZE-1];
-    reg signed [15:0] biases3 [0:OUTPUT_SIZE-1];
+    (* ram_style = "block" *) reg signed [15:0] mem_weights3 [0:511];
+    (* ram_style = "block" *) reg signed [15:0] mem_biases3 [0:15];
+
+    reg signed [15:0] weights1 [0:65535];
+    reg signed [15:0] biases1 [0:63];
+    
+    reg signed [15:0] weights2 [0:2047];
+    reg signed [15:0] biases2 [0:31];
+    
+    reg signed [15:0] weights3 [0:511];
+    reg signed [15:0] biases3 [0:15];
+
+    integer i, j;
+
+    always @(posedge clk) begin
+        for (i = 0; i < 65536; i = i + 1) begin
+            weights1[i] <= mem_weights1[i];
+        end
+        for (i = 0; i < 64; i = i + 1) begin
+            biases1[i] <= mem_biases1[i];
+        end
+        for (i = 0; i < 2048; i = i + 1) begin
+            weights2[i] <= mem_weights2[i];
+        end
+        for (i = 0; i < 32; i = i + 1) begin
+            biases2[i] <= mem_biases2[i];
+        end
+        for (i = 0; i < 512; i = i + 1) begin
+            weights3[i] <= mem_weights3[i];
+        end
+        for (i = 0; i < 16; i = i + 1) begin
+            biases3[i] <= mem_biases3[i];
+        end
+    end
     
     // Layer Outputs
     reg signed [15:0] hidden1 [0:HIDDEN1_SIZE-1];
     reg signed [15:0] hidden2 [0:HIDDEN2_SIZE-1];
     reg signed [15:0] output_layer [0:OUTPUT_SIZE-1];
-    
-    integer i, j;
     
     // ReLU activation function
     function signed [15:0] relu;
@@ -235,7 +265,7 @@ module NeuralNetwork (
         for (i = 0; i < HIDDEN1_SIZE; i = i + 1) begin
             new_hidden1[i] = biases1[i];
             for (j = 0; j < INPUT_SIZE; j = j + 1) begin
-                new_hidden1[i] = new_hidden1[i] + (features[j] == 1 ? weights1[i][j] : 0); 
+                new_hidden1[i] = new_hidden1[i] + (features[j] == 1 ? weights1[i*INPUT_SIZE+j] : 0); 
             end
             new_hidden1[i] = relu(new_hidden1[i]); 
         end
@@ -249,7 +279,7 @@ module NeuralNetwork (
         for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
             new_hidden2[i] = biases2[i];
             for (j = 0; j < HIDDEN1_SIZE; j = j + 1) begin
-                multiplier_out2[i][j] = hidden1[j] * weights2[i][j];
+                multiplier_out2[i][j] = hidden1[j] * weights2[i*HIDDEN1_SIZE+j];
                 shift_out2[i][j] = multiplier_out2[i][j] >> 8;
                 new_hidden2[i] = new_hidden2[i] + shift_out2[i][j];
             end
@@ -265,7 +295,7 @@ module NeuralNetwork (
         for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin
             new_output_layer[i] = biases3[i];
             for (j = 0; j < HIDDEN2_SIZE; j = j + 1) begin
-                multiplier_out3[i][j] = hidden2[j] * weights3[i][j];
+                multiplier_out3[i][j] = hidden2[j] * weights3[i*HIDDEN2_SIZE+j];
                 shift_out3[i][j] = multiplier_out3[i][j] >> 8;
                 new_output_layer[i] = new_output_layer[i] + shift_out3[i][j];
             end
@@ -339,11 +369,11 @@ module NeuralNetwork (
     end
 
     initial begin
-        $readmemb("layer1_weight.mem", weights1);
-        $readmemb("layer1_bias.mem", biases1);
-        $readmemb("layer2_weight.mem", weights2);
-        $readmemb("layer2_bias.mem", biases2);
-        $readmemb("layer3_weight.mem", weights3);
-        $readmemb("layer3_bias.mem", biases3);
+        $readmemb("layer1_weight.mem", mem_weights1);
+        $readmemb("layer1_bias.mem", mem_biases1);
+        $readmemb("layer2_weight.mem", mem_weights2);
+        $readmemb("layer2_bias.mem", mem_biases2);
+        $readmemb("layer3_weight.mem", mem_weights3);
+        $readmemb("layer3_bias.mem", mem_biases3);
     end
 endmodule
