@@ -191,7 +191,7 @@ module NeuralNetwork (
     // state machine
     localparam IDLE = 0, COMPUTE = 1;
     reg state;
-    reg [2:0] count_clocks; 
+    integer count_clocks; 
 
     // Define the parameters for layer sizes
     parameter INPUT_SIZE = 784;
@@ -310,12 +310,18 @@ module NeuralNetwork (
             for (i = 0; i < INPUT_SIZE; i = i + 1) begin
                 features[i] <= 0;
             end
+            for (i = 0; i < HIDDEN1_SIZE; i = i + 1) begin
+                neuron_out1[i] <= 0;
+            end
         end 
         else if (state == IDLE) begin
             if (start) begin
                 // Load the input features
                 for (i = 0; i < INPUT_SIZE; i = i + 1) begin
                     features[i] <= in_features[i];
+                end
+                for (i = 0; i < HIDDEN1_SIZE; i = i + 1) begin
+                    neuron_out1[i] <= 0;
                 end
                 state <= COMPUTE;
                 done <= 0;
@@ -345,7 +351,7 @@ module NeuralNetwork (
             prediction <= new_prediction;
 
             // Update state or increment the clock counter
-            if (count_clocks >= 3) begin
+            if (count_clocks >= 50176 + 2) begin
                 state <= IDLE;
                 done <= 1;
             end
@@ -369,7 +375,7 @@ module NeuralNetwork (
             end
         end
     end
-    
+
     assign biases1[0] = 16'b0000000001110011;
     assign biases1[1] = 16'b0000000000100101;
     assign biases1[2] = 16'b0000000001000000;
