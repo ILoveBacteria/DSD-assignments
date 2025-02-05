@@ -209,13 +209,13 @@ module NeuralNetwork (
     reg signed [15:0] weights3 [0:319];
     reg signed [15:0] biases3 [0:9];
 
+    // Define address registers for weights and biases
     reg [15:0] weights1_addr;
     // reg [15:0] weights2_addr;
     // reg [15:0] weights3_addr;
 
     // Instantiate the BRAM for weights1
     mem_weights1 mem_weights1(clk, weights1_addr, weights1);
-
 
     // Layer Outputs
     reg signed [15:0] hidden1 [0:HIDDEN1_SIZE-1];
@@ -230,7 +230,9 @@ module NeuralNetwork (
         end
     endfunction
 
-    integer i, j;
+    // Define the loop variables
+    integer i, j, k;
+    reg [5:0] i_neuron;
 
     // ============================================
     // combinational Computation of the neurons
@@ -238,14 +240,16 @@ module NeuralNetwork (
 
     // layer 1
     reg signed [15:0] new_hidden1 [0:HIDDEN1_SIZE-1];
+    reg signed [15:0] neuron_out1 [0:HIDDEN1_SIZE-1];
+
     always @(*) begin
         for (i = 0; i < HIDDEN1_SIZE; i = i + 1) begin
-            new_hidden1[i] = biases1[i];
-            for (j = 0; j < INPUT_SIZE; j = j + 1) begin
-                new_hidden1[i] = new_hidden1[i] + (features[j] == 1 ? weights1[i*INPUT_SIZE+j] : 0); 
-            end
-            new_hidden1[i] = relu(new_hidden1[i]); 
+            new_hidden1[i] = relu(neuron_out1[i] + biases1[i]); 
         end
+    end
+
+    always @(posedge clk) begin
+        neuron_out1[i_neuron] = neuron_out1[i_neuron] + (features[k] == 1 ? weights1 : 0); 
     end
 
     // layer 2
@@ -300,6 +304,9 @@ module NeuralNetwork (
             done <= 0;
             count_clocks <= 0;
             prediction <= 0;
+            weights1_addr <= 0;
+            k <= 0;
+            i_neuron <= 0;
             for (i = 0; i < INPUT_SIZE; i = i + 1) begin
                 features[i] <= 0;
             end
@@ -313,6 +320,9 @@ module NeuralNetwork (
                 state <= COMPUTE;
                 done <= 0;
                 count_clocks <= 0;
+                weights1_addr <= 0;
+                k <= 0;
+                i_neuron <= 0;
             end
         end 
         else begin
@@ -341,6 +351,21 @@ module NeuralNetwork (
             end
             else begin
                 count_clocks <= count_clocks + 1;
+            end
+
+            // Update the weights1 address
+            if (weights1_addr >= 50175) begin
+                weights1_addr <= 0;
+            end
+            else begin
+                weights1_addr <= weights1_addr + 1;
+            end
+            if (k >= INPUT_SIZE - 1) begin
+                k <= 0;
+                i_neuron <= i_neuron + 1;
+            end
+            else begin
+                k <= k + 1;
             end
         end
     end
