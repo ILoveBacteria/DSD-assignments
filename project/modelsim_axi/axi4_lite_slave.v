@@ -219,8 +219,8 @@ module NeuralNetwork (
 
     // Define address registers for weights and biases
     reg [15:0] weights1_addr;
-    reg [15:0] weights2_addr;
-    reg [15:0] weights3_addr;
+    reg [10:0] weights2_addr;
+    reg [8:0] weights3_addr;
 
     // Instantiate the BRAM for weights1
     mem_weights1 mem_weights1(clk, weights1_addr, weights1);
@@ -406,12 +406,7 @@ module NeuralNetwork (
 
             // Update the weights2 address
             i_hidden1 <= i_hidden1 + 1;
-            if (weights2_addr >= WEIGHTS2_SIZE - 1) begin
-                weights2_addr <= 0;
-            end
-            else begin
-                weights2_addr <= weights2_addr + 1;
-            end
+            weights2_addr <= weights2_addr + 1;
             if (i_hidden1 >= HIDDEN1_SIZE - 1) begin
                 i_neuron2 <= i_neuron2 + 1;
             end
