@@ -275,17 +275,18 @@ module NeuralNetwork (
     end
 
     // Output Layer computation
+    reg [4:0] i_hidden2;
+    reg [3:0] i_neuron3;
+    reg signed [15:0] neuron_out3 [0:OUTPUT_SIZE-1];
     reg signed [15:0] new_output_layer [0:OUTPUT_SIZE-1];
-    reg signed [31:0] multiplier_out3 [0:OUTPUT_SIZE-1][0:HIDDEN2_SIZE-1];
-    reg signed [15:0] shift_out3 [0:OUTPUT_SIZE-1][0:HIDDEN2_SIZE-1];
+    reg signed [31:0] multiplier_out3;
+    reg signed [15:0] shift_out3;
+
     always @(*) begin
+        multiplier_out3 = hidden2[i_hidden2] * weights3;
+        shift_out3 = multiplier_out3 >> 8;
         for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin
-            new_output_layer[i] = biases3[i];
-            for (j = 0; j < HIDDEN2_SIZE; j = j + 1) begin
-                multiplier_out3[i][j] = hidden2[j] * weights3[i*HIDDEN2_SIZE+j];
-                shift_out3[i][j] = multiplier_out3[i][j] >> 8;
-                new_output_layer[i] = new_output_layer[i] + shift_out3[i][j];
-            end
+            new_output_layer[i] = neuron_out3[i] + biases3[i];
         end
     end
 
@@ -314,7 +315,9 @@ module NeuralNetwork (
             i_features <= 0;
             i_neuron1 <= 0;
             i_neuron2 <= 0;
+            i_neuron3 <= 0;
             i_hidden1 <= 0;
+            i_hidden2 <= 0;
             for (i = 0; i < INPUT_SIZE; i = i + 1) begin
                 features[i] <= 0;
             end
@@ -323,6 +326,9 @@ module NeuralNetwork (
             end
             for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
                 neuron_out2[i] <= 0;
+            end
+            for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin
+                neuron_out3[i] <= 0;
             end
         end 
         else if (state == IDLE) begin
@@ -337,14 +343,19 @@ module NeuralNetwork (
                 for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
                     neuron_out2[i] <= 0;
                 end
+                for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin
+                    neuron_out3[i] <= 0;
+                end
                 state <= COMPUTE;
                 done <= 0;
                 i_hidden1 <= 0;
+                i_hidden2 <= 0;
                 count_clocks <= 0;
                 weights1_addr <= 0;
                 i_features <= 0;
                 i_neuron1 <= 0;
                 i_neuron2 <= 0;
+                i_neuron3 <= 0;
             end
         end 
         else begin
@@ -361,6 +372,7 @@ module NeuralNetwork (
             end
 
             // Output Layer computation
+            neuron_out3[i_neuron3] <= neuron_out3[i_neuron3] + shift_out3;
             for (i = 0; i < OUTPUT_SIZE; i = i + 1) begin
                 output_layer[i] <= new_output_layer[i];
             end
@@ -402,6 +414,23 @@ module NeuralNetwork (
             end
             if (i_hidden1 >= HIDDEN1_SIZE - 1) begin
                 i_neuron2 <= i_neuron2 + 1;
+            end
+
+            // Update the weights3 address
+            i_hidden2 <= i_hidden2 + 1;
+            if (weights3_addr >= WEIGHTS3_SIZE - 1) begin
+                weights3_addr <= 0;
+            end
+            else begin
+                weights3_addr <= weights3_addr + 1;
+            end
+            if (i_hidden2 >= HIDDEN2_SIZE - 1) begin
+                if (i_neuron3 >= OUTPUT_SIZE - 1) begin
+                    i_neuron3 <= 0;
+                end
+                else begin
+                    i_neuron3 <= i_neuron3 + 1;
+                end
             end
         end
     end
