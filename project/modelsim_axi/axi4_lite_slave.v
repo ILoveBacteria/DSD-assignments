@@ -381,7 +381,7 @@ module NeuralNetwork (
             prediction <= new_prediction;
 
             // Update state or increment the clock counter
-            if (count_clocks >= WEIGHTS1_SIZE + 2) begin
+            if (count_clocks >= WEIGHTS1_SIZE + WEIGHTS2_SIZE + WEIGHTS3_SIZE) begin
                 state <= IDLE;
                 done <= 1;
             end
