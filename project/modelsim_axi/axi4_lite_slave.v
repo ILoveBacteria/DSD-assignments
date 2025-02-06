@@ -259,18 +259,18 @@ module NeuralNetwork (
     end
 
     // layer 2
+    reg [5:0] i_hidden1;
+    reg [4:0] i_neuron2;
+    reg signed [15:0] neuron_out2 [0:HIDDEN2_SIZE-1];
     reg signed [15:0] new_hidden2 [0:HIDDEN2_SIZE-1];
-    reg signed [31:0] multiplier_out2 [0:HIDDEN2_SIZE-1][0:HIDDEN1_SIZE-1];
-    reg signed [15:0] shift_out2 [0:HIDDEN2_SIZE-1][0:HIDDEN1_SIZE-1];
+    reg signed [31:0] multiplier_out2;
+    reg signed [15:0] shift_out2;
+    
     always @(*) begin
+        multiplier_out2 = hidden1[i_hidden1] * weights2;
+        shift_out2 = multiplier_out2 >> 8;
         for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
-            new_hidden2[i] = biases2[i];
-            for (j = 0; j < HIDDEN1_SIZE; j = j + 1) begin
-                multiplier_out2[i][j] = hidden1[j] * weights2[i*HIDDEN1_SIZE+j];
-                shift_out2[i][j] = multiplier_out2[i][j] >> 8;
-                new_hidden2[i] = new_hidden2[i] + shift_out2[i][j];
-            end
-            new_hidden2[i] = relu(new_hidden2[i]);
+            new_hidden2[i] = relu(neuron_out2[i] + biases2[i]);
         end
     end
 
@@ -313,11 +313,16 @@ module NeuralNetwork (
             weights1_addr <= 0;
             i_features <= 0;
             i_neuron1 <= 0;
+            i_neuron2 <= 0;
+            i_hidden1 <= 0;
             for (i = 0; i < INPUT_SIZE; i = i + 1) begin
                 features[i] <= 0;
             end
             for (i = 0; i < HIDDEN1_SIZE; i = i + 1) begin
                 neuron_out1[i] <= 0;
+            end
+            for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
+                neuron_out2[i] <= 0;
             end
         end 
         else if (state == IDLE) begin
@@ -329,12 +334,17 @@ module NeuralNetwork (
                 for (i = 0; i < HIDDEN1_SIZE; i = i + 1) begin
                     neuron_out1[i] <= 0;
                 end
+                for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
+                    neuron_out2[i] <= 0;
+                end
                 state <= COMPUTE;
                 done <= 0;
+                i_hidden1 <= 0;
                 count_clocks <= 0;
                 weights1_addr <= 0;
                 i_features <= 0;
                 i_neuron1 <= 0;
+                i_neuron2 <= 0;
             end
         end 
         else begin
@@ -345,6 +355,7 @@ module NeuralNetwork (
             end
 
             // Layer 2 computation
+            neuron_out2[i_neuron2] <= neuron_out2[i_neuron2] + shift_out2;
             for (i = 0; i < HIDDEN2_SIZE; i = i + 1) begin
                 hidden2[i] <= new_hidden2[i];
             end
@@ -379,6 +390,18 @@ module NeuralNetwork (
             end
             else begin
                 i_features <= i_features + 1;
+            end
+
+            // Update the weights2 address
+            i_hidden1 <= i_hidden1 + 1;
+            if (weights2_addr >= WEIGHTS2_SIZE - 1) begin
+                weights2_addr <= 0;
+            end
+            else begin
+                weights2_addr <= weights2_addr + 1;
+            end
+            if (i_hidden1 >= HIDDEN1_SIZE - 1) begin
+                i_neuron2 <= i_neuron2 + 1;
             end
         end
     end
