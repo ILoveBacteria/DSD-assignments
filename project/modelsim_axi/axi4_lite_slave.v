@@ -312,6 +312,8 @@ module NeuralNetwork (
             count_clocks <= 0;
             prediction <= 0;
             weights1_addr <= 0;
+            weights2_addr <= 0;
+            weights3_addr <= 0;
             i_features <= 0;
             i_neuron1 <= 0;
             i_neuron2 <= 0;
@@ -352,6 +354,8 @@ module NeuralNetwork (
                 i_hidden2 <= 0;
                 count_clocks <= 0;
                 weights1_addr <= 0;
+                weights2_addr <= 0;
+                weights3_addr <= 0;
                 i_features <= 0;
                 i_neuron1 <= 0;
                 i_neuron2 <= 0;
